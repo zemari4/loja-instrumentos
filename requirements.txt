@@ -28,15 +28,10 @@ django-extensions==4.1
 django-markdownify==0.9.6
 bleach==6.3.0
 pillow==12.1.1
-python-slugify==8.0.4
 
 # ── Rate limit / Utils ────────────────────────────
 django-ratelimit==4.1.0
 django-user-agents==0.4.0
-requests==2.32.5
-
-# ── AI (Copilot futuro) ───────────────────────────
-anthropic==0.96.0
 
 # ── Utils ─────────────────────────────────────────
 python-dotenv==1.2.2
