@@ -8,6 +8,8 @@ STORAGES = {
     "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
 }
 
+INSTALLED_APPS = [app for app in INSTALLED_APPS if app != "allauth.socialaccount.providers.google"]
+
 PASSWORD_HASHERS = ["django.contrib.auth.hashers.MD5PasswordHasher"]
 
 AUTHENTICATION_BACKENDS = ["django.contrib.auth.backends.ModelBackend"]
