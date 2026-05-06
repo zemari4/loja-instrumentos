@@ -1,0 +1,36 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    env:
+      DJANGO_ENV: test
+      SECRET_KEY: ${{ secrets.CI_SECRET_KEY || 'ci-secret-key-not-for-production' }}
+      DISABLE_CACHE: "True"
+      DISABLE_REDIS: "True"
+      ENABLE_S3_STORAGE: "False"
+
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+
+      - name: Set up Python
+        uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2  # v5.3.0
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: pytest authentification/tests/ catalog/tests/ cart/tests/ home/tests/ --tb=short -q
