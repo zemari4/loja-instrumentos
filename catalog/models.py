@@ -48,7 +48,7 @@ class Instrument(models.Model):
     stock = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
     is_featured = models.BooleanField(default=False)
-    views_count = models.PositiveIntegerField(default=0, editable=False)
+    views_count = models.PositiveIntegerField(default=0, editable=False, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
