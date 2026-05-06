@@ -39,6 +39,8 @@ IMPORTANTE: nunca finalizar tarefa sem testes E fragmento towncrier.
 - **pytest style** com fixtures definidas no conftest raiz
 - Testar **lógica de negócio**, não o framework
 - Mockar apenas **fronteiras externas** (APIs de pagamento, email, S3), nunca código interno
+- **Faker obrigatório** — usar `Faker` para gerar dados nos testes. Nunca usar strings, números ou emails hardcoded (ex: `"teste@email.com"`, `"João"`, `123`). Dados fixos tornam testes frágeis e mascaram erros de validação
+- **Verificação de hardcode**: ao criar ou revisar testes, checar se há valores literais que deveriam ser gerados dinamicamente. Se encontrar, corrigir antes de finalizar
 
 ```bash
 pytest                              # todos os testes
@@ -117,3 +119,4 @@ Funcionalidades completas devem ter documentação em `docs/`. Ao alterar lógic
 - Nunca usar comentários HTML (`<!-- -->`) em templates — usar `{# #}` ou `{% comment %}`
 - Nunca usar valores arbitrários de tamanho (`text-[13px]`, `h-[200px]`) — usar classe padrão mais próxima
 - Nunca finalizar tarefa sem testes e fragmento towncrier
+- Nunca usar valores hardcoded em testes — sempre `Faker`
