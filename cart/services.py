@@ -46,6 +46,8 @@ def cart_count(session):
 
 
 def add_item(session, product_pk, qty=1):
+    if qty <= 0:
+        return
     raw = _get_raw(session)
     try:
         obj = Instrument.objects.get(pk=product_pk, is_active=True)
