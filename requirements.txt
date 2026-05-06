@@ -1,0 +1,44 @@
+# ── Core ──────────────────────────────────────────
+Django==6.0.3
+dj-database-url==3.1.2
+django-environ==0.13.0
+whitenoise==6.12.0
+gunicorn==25.1.0
+
+# ── Frontend ──────────────────────────────────────
+django-htmx==1.27.0
+django-tailwind==4.4.2
+pytailwindcss==0.3.0
+django-crispy-forms==2.6
+crispy-tailwind==1.0.3
+
+# ── Auth ──────────────────────────────────────────
+django-allauth==65.15.0
+
+# ── Admin ─────────────────────────────────────────
+django-jazzmin==3.0.3
+django-colorfield==0.14.0
+
+# ── Models ────────────────────────────────────────
+django-simple-history==3.11.0
+django-filter==25.2
+django-extensions==4.1
+
+# ── Content ───────────────────────────────────────
+django-markdownify==0.9.6
+bleach==6.3.0
+pillow==12.1.1
+python-slugify==8.0.4
+
+# ── Rate limit / Utils ────────────────────────────
+django-ratelimit==4.1.0
+django-user-agents==0.4.0
+requests==2.32.5
+
+# ── AI (Copilot futuro) ───────────────────────────
+anthropic==0.96.0
+
+# ── Utils ─────────────────────────────────────────
+python-dotenv==1.2.2
+pytz==2026.1.post1
+humanize==4.15.0

@@ -1,0 +1,20 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:duettomusical.com.br)",
+      "PowerShell(Get-ChildItem \"C:\\\\Users\\\\duart\\\\OneDrive\\\\Documents\\\\Projetos\\\\musicmais\" -Directory | Where-Object { $_.Name -notmatch \"^\\(\\\\.|_|staticfiles|media|logs|temp\\)\" } | Select-Object Name | Sort-Object Name)",
+      "PowerShell(cd \"C:\\\\Users\\\\duart\\\\OneDrive\\\\Documents\\\\Projetos\\\\musicmais\"; $env:DJANGO_ENV=\"dev\"; $env:SECRET_KEY=\"dev-secret\"; .\\\\.venv\\\\Scripts\\\\python.exe manage.py makemigrations authentification 2>&1)",
+      "PowerShell(cd \"C:\\\\Users\\\\duart\\\\OneDrive\\\\Documents\\\\Projetos\\\\musicmais\"; $env:DJANGO_ENV=\"dev\"; $env:SECRET_KEY=\"dev-secret\"; .\\\\.venv\\\\Scripts\\\\python.exe manage.py migrate authentification 2>&1)",
+      "PowerShell(cd \"C:\\\\Users\\\\duart\\\\OneDrive\\\\Documents\\\\Projetos\\\\musicmais\"; $env:DJANGO_ENV=\"dev\"; $env:SECRET_KEY=\"dev-secret\"; .\\\\.venv\\\\Scripts\\\\python.exe manage.py check 2>&1)",
+      "PowerShell(cd \"C:\\\\Users\\\\duart\\\\OneDrive\\\\Documents\\\\Projetos\\\\musicmais\"; $env:DJANGO_ENV=\"dev\"; $env:SECRET_KEY=\"dev-secret\"; .\\\\.venv\\\\Scripts\\\\python.exe manage.py makemigrations catalog 2>&1)",
+      "PowerShell(cd \"C:\\\\Users\\\\duart\\\\OneDrive\\\\Documents\\\\Projetos\\\\musicmais\"; $env:DJANGO_ENV=\"dev\"; $env:SECRET_KEY=\"dev-secret\"; .\\\\.venv\\\\Scripts\\\\python.exe manage.py migrate catalog 2>&1; .\\\\.venv\\\\Scripts\\\\python.exe manage.py check 2>&1)",
+      "PowerShell(npm *)",
+      "PowerShell(Get-Command *)",
+      "Bash(.venv\\\\Scripts\\\\python.exe -c \"import watchfiles; print\\('ok'\\)\")",
+      "Bash(pip install *)",
+      "Bash(git init *)",
+      "Bash(git branch *)",
+      "Bash(git add *)"
+    ]
+  }
+}

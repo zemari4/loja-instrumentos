@@ -1,0 +1,104 @@
+[project]
+name = "musicmais"
+version = "0.1.0"
+requires-python = ">=3.12"
+license = {text = "Proprietary"}
+
+[tool.bumpversion]
+current_version = "0.1.0"
+commit = false
+tag = false
+
+[[tool.bumpversion.files]]
+filename = "pyproject.toml"
+search = 'version = "{current_version}"'
+replace = 'version = "{new_version}"'
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "backend.settings"
+python_files = ["test_*.py"]
+python_classes = ["Test*"]
+python_functions = ["test_*"]
+addopts = "-v --tb=short --strict-markers --reuse-db"
+filterwarnings = [
+    "ignore::DeprecationWarning:factory.*:",
+    "ignore::django.utils.deprecation.RemovedInDjango61Warning",
+    "ignore::ResourceWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "e2e: marks end-to-end tests requiring playwright",
+]
+
+[tool.coverage.run]
+source = ["."]
+branch = true
+omit = [
+    "*/migrations/*",
+    "*/tests/*",
+    "manage.py",
+    "backend/settings*.py",
+    "backend/celery.py",
+    "backend/wsgi.py",
+    "backend/asgi.py",
+    "theme/*",
+    ".venv/*",
+    "conftest.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+skip_covered = true
+fail_under = 40
+exclude_lines = [
+    "pragma: no cover",
+    "def __repr__",
+    "if TYPE_CHECKING:",
+    "if settings.DEBUG",
+    "raise NotImplementedError",
+    "pass",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+exclude = ["migrations", ".venv", "theme"]
+
+[tool.ruff.lint]
+select = ["F", "E"]
+ignore = [
+    "E501", "E402", "E731", "E741",
+    "F401", "F403", "F405", "F541", "F811", "F841",
+]
+
+[tool.towncrier]
+package = "musicmais"
+directory = "changelog.d"
+filename = "CHANGELOG.md"
+title_format = "## [{version}] — {project_date}"
+template = "changelog.d/_template.md"
+
+[[tool.towncrier.type]]
+directory = "feature"
+name = "Funcionalidades"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "bugfix"
+name = "Correções"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "improvement"
+name = "Melhorias"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "removal"
+name = "Remoções"
+showcontent = true
+
+[[tool.towncrier.type]]
+directory = "doc"
+name = "Documentação"
+showcontent = true

@@ -1,0 +1,204 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Carrinho — Music Mais</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',600:'#2563eb',700:'#1d4ed8',800:'#1e40af'}}}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>body{font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+<!-- TOP BAR -->
+<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
+  Frete grátis acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros
+</div>
+
+<!-- HEADER -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
+    <a href="{% url 'home:index' %}" class="text-2xl font-extrabold text-primary-700 tracking-tight flex-shrink-0">
+      Music<span class="text-gray-800">Mais</span>
+    </a>
+    <form method="get" action="{% url 'catalog:search' %}" class="flex-1 max-w-xl hidden md:block">
+      <div class="relative">
+        <input type="search" name="q" placeholder="Buscar instrumentos, marcas..."
+          class="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        <button type="submit" class="absolute right-0 top-0 h-full px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-r-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+    <nav class="flex items-center gap-4 text-sm text-gray-600">
+      {% if user.is_authenticated %}
+      <a href="{% url 'authentification:profile' %}" class="hover:text-primary-700">{{ user.first_name|default:user.username }}</a>
+      <a href="{% url 'authentification:logout' %}" class="hover:text-primary-700">Sair</a>
+      {% else %}
+      <a href="{% url 'authentification:login' %}" class="hover:text-primary-700">Entrar</a>
+      {% endif %}
+      <a href="{% url 'cart:cart' %}" class="font-semibold text-primary-700">
+        Carrinho{% if cart_count %} ({{ cart_count }}){% endif %}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<!-- MENSAGENS FLASH -->
+{% if messages %}
+<div class="max-w-5xl mx-auto px-4 pt-4">
+  {% for msg in messages %}
+  <div class="mb-2 px-4 py-3 rounded-lg text-sm
+    {% if msg.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+    {% elif msg.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+    {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">
+    Seu carrinho
+    {% if items %}<span class="text-base font-normal text-gray-400">({{ items|length }} item{{ items|length|pluralize:",ns" }})</span>{% endif %}
+  </h1>
+
+  {% if items %}
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+    <!-- Lista de itens -->
+    <div class="lg:col-span-2 space-y-4">
+      {% for item in items %}
+      <div class="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-start">
+
+        <!-- Imagem -->
+        <a href="{% url 'catalog:detail' item.slug %}" class="flex-shrink-0">
+          {% if item.main_image %}
+          <img src="{{ item.main_image.url }}" alt="{{ item.name }}"
+            class="w-20 h-20 object-contain rounded-xl bg-gray-50" />
+          {% else %}
+          <div class="w-20 h-20 rounded-xl bg-gray-100 flex items-center justify-center">
+            <svg class="w-8 h-8 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+                d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+            </svg>
+          </div>
+          {% endif %}
+        </a>
+
+        <!-- Info -->
+        <div class="flex-1 min-w-0">
+          <a href="{% url 'catalog:detail' item.slug %}"
+            class="font-semibold text-gray-800 hover:text-primary-700 line-clamp-2 text-sm leading-snug">
+            {{ item.name }}
+          </a>
+          <p class="text-primary-700 font-bold mt-1">R$&nbsp;{{ item.price|floatformat:2 }}</p>
+
+          <!-- Qty + remover -->
+          <div class="flex items-center gap-3 mt-3">
+            <form method="post" action="{% url 'cart:update' item.pk %}" class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+              {% csrf_token %}
+              <button type="button" onclick="adjustQty(this, -1)" class="px-2.5 py-1.5 text-gray-500 hover:bg-gray-100 font-bold text-base">−</button>
+              <input type="number" name="qty" value="{{ item.qty }}" min="1" max="{{ item.max_stock }}"
+                onchange="this.form.submit()"
+                class="w-12 text-center text-sm font-semibold py-1.5 focus:outline-none border-x border-gray-300" />
+              <button type="button" onclick="adjustQty(this, 1)" class="px-2.5 py-1.5 text-gray-500 hover:bg-gray-100 font-bold text-base">+</button>
+            </form>
+
+            <form method="post" action="{% url 'cart:remove' item.pk %}">
+              {% csrf_token %}
+              <button type="submit" class="text-xs text-red-400 hover:text-red-600 underline">Remover</button>
+            </form>
+          </div>
+        </div>
+
+        <!-- Subtotal -->
+        <div class="text-right flex-shrink-0">
+          <p class="text-sm text-gray-400 text-xs">Subtotal</p>
+          <p class="font-bold text-gray-900">R$&nbsp;{{ item.subtotal|floatformat:2 }}</p>
+        </div>
+      </div>
+      {% endfor %}
+
+      <!-- Continuar comprando -->
+      <div class="pt-2">
+        <a href="{% url 'catalog:list' %}" class="text-sm text-primary-600 hover:underline">← Continuar comprando</a>
+      </div>
+    </div>
+
+    <!-- Resumo do pedido -->
+    <div class="lg:col-span-1">
+      <div class="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+        <h2 class="font-bold text-gray-800 text-lg mb-4">Resumo do pedido</h2>
+        <div class="space-y-2 text-sm text-gray-600">
+          <div class="flex justify-between">
+            <span>Subtotal ({{ items|length }} item{{ items|length|pluralize:",ns" }})</span>
+            <span>R$&nbsp;{{ total|floatformat:2 }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Frete</span>
+            {% if total >= 299 %}
+            <span class="text-green-600 font-semibold">Grátis</span>
+            {% else %}
+            <span class="text-gray-400">Calcular no checkout</span>
+            {% endif %}
+          </div>
+        </div>
+        <div class="border-t border-gray-100 mt-4 pt-4 flex justify-between font-bold text-gray-900">
+          <span>Total</span>
+          <span>R$&nbsp;{{ total|floatformat:2 }}</span>
+        </div>
+        {% if total < 299 %}
+        <p class="text-xs text-gray-400 mt-2">
+          Faltam R$&nbsp;{{ 299|add:0|floatformat:2 }} para frete grátis
+        </p>
+        {% endif %}
+        <button disabled
+          class="mt-5 block w-full bg-primary-600 opacity-60 text-white font-bold py-3 rounded-xl text-center text-sm cursor-not-allowed">
+          Finalizar pedido (em breve)
+        </button>
+        <p class="text-xs text-gray-400 text-center mt-3">Pagamento seguro via Pix ou cartão</p>
+      </div>
+    </div>
+
+  </div>
+
+  {% else %}
+  <!-- Carrinho vazio -->
+  <div class="text-center py-20">
+    <svg class="w-20 h-20 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+        d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+    </svg>
+    <p class="text-gray-400 text-lg mb-6">Seu carrinho está vazio.</p>
+    <a href="{% url 'catalog:list' %}"
+      class="inline-block bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 px-8 rounded-xl text-sm transition-colors">
+      Ver produtos
+    </a>
+  </div>
+  {% endif %}
+
+</div>
+
+<footer class="bg-gray-900 text-gray-500 text-xs text-center py-6 mt-12">
+  &copy; 2025 Music Mais. Todos os direitos reservados.
+</footer>
+
+<script>
+function adjustQty(btn, delta) {
+  const form = btn.closest('form');
+  const input = form.querySelector('input[name="qty"]');
+  const max = parseInt(input.max) || 999;
+  const newVal = Math.max(1, Math.min(max, parseInt(input.value || 1) + delta));
+  input.value = newVal;
+  form.submit();
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,199 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>
+    {% if current_category %}{{ current_category.name }} — {% endif %}
+    {% if q %}Busca: "{{ q }}" — {% endif %}
+    Music Mais
+  </title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',600:'#2563eb',700:'#1d4ed8',800:'#1e40af'}}}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>body{font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+<!-- TOP BAR -->
+<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
+  Frete grátis acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros
+</div>
+
+<!-- HEADER -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
+    <a href="/" class="text-2xl font-extrabold text-primary-700 tracking-tight flex-shrink-0">
+      Music<span class="text-gray-800">Mais</span>
+    </a>
+    <form method="get" action="{% url 'catalog:search' %}" class="flex-1 max-w-xl hidden md:block">
+      <div class="relative">
+        <input type="search" name="q" value="{{ q }}" placeholder="Buscar instrumentos, marcas..."
+          class="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        <button type="submit" class="absolute right-0 top-0 h-full px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-r-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+    <nav class="flex items-center gap-4 text-sm text-gray-600">
+      {% if user.is_authenticated %}
+      <a href="{% url 'authentification:profile' %}" class="hover:text-primary-700">{{ user.first_name|default:user.username }}</a>
+      <a href="{% url 'authentification:logout' %}" class="hover:text-primary-700">Sair</a>
+      {% else %}
+      <a href="{% url 'authentification:login' %}" class="hover:text-primary-700">Entrar</a>
+      {% endif %}
+      <a href="/carrinho" class="hover:text-primary-700">Carrinho</a>
+    </nav>
+  </div>
+</header>
+
+<!-- MESSAGES -->
+{% if messages %}
+<div class="max-w-7xl mx-auto px-4 pt-4 space-y-2">
+  {% for message in messages %}
+  <div class="rounded-lg px-4 py-3 text-sm
+    {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+    {% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+    {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+    {{ message }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-500 mb-6">
+    <a href="/" class="hover:text-primary-600">Início</a>
+    <span class="mx-2">/</span>
+    {% if current_category %}
+    {% if current_category.parent %}
+    <a href="{{ current_category.parent.get_absolute_url }}" class="hover:text-primary-600">{{ current_category.parent.name }}</a>
+    <span class="mx-2">/</span>
+    {% endif %}
+    <span class="text-gray-800 font-medium">{{ current_category.name }}</span>
+    {% elif q %}
+    <span class="text-gray-800 font-medium">Busca: "{{ q }}"</span>
+    {% else %}
+    <span class="text-gray-800 font-medium">Todos os produtos</span>
+    {% endif %}
+  </nav>
+
+  <div class="flex gap-8">
+
+    <!-- Sidebar de categorias -->
+    <aside class="hidden lg:block w-56 flex-shrink-0">
+      <h3 class="text-sm font-bold text-gray-700 uppercase tracking-wider mb-3">Categorias</h3>
+      <ul class="space-y-1 text-sm">
+        <li>
+          <a href="{% url 'catalog:list' %}"
+            class="block px-3 py-1.5 rounded-lg transition-colors {% if not current_category %}bg-primary-50 text-primary-700 font-medium{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+            Todos os produtos
+          </a>
+        </li>
+        {% for cat in categories %}
+        <li>
+          <a href="{{ cat.get_absolute_url }}"
+            class="block px-3 py-1.5 rounded-lg transition-colors {% if current_category.pk == cat.pk %}bg-primary-50 text-primary-700 font-medium{% else %}text-gray-600 hover:bg-gray-100{% endif %}">
+            {{ cat.name }}
+          </a>
+          {% if cat.children.all %}
+          <ul class="ml-4 mt-1 space-y-1">
+            {% for sub in cat.children.all %}
+            <li>
+              <a href="{{ sub.get_absolute_url }}"
+                class="block px-3 py-1 rounded-lg text-xs transition-colors {% if current_category.pk == sub.pk %}bg-primary-50 text-primary-700 font-medium{% else %}text-gray-500 hover:bg-gray-100{% endif %}">
+                {{ sub.name }}
+              </a>
+            </li>
+            {% endfor %}
+          </ul>
+          {% endif %}
+        </li>
+        {% endfor %}
+      </ul>
+    </aside>
+
+    <!-- Conteúdo principal -->
+    <div class="flex-1 min-w-0">
+
+      <!-- Cabeçalho de listagem + ordenação -->
+      <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <p class="text-sm text-gray-500">
+          {% if q %}
+          {{ page_obj.paginator.count }} resultado{{ page_obj.paginator.count|pluralize:",s" }} para "<strong>{{ q }}</strong>"
+          {% else %}
+          {{ page_obj.paginator.count }} produto{{ page_obj.paginator.count|pluralize:",s" }}
+          {% endif %}
+        </p>
+        <form method="get" class="flex items-center gap-2 text-sm">
+          {% if q %}<input type="hidden" name="q" value="{{ q }}">{% endif %}
+          <label class="text-gray-500">Ordenar:</label>
+          <select name="sort" onchange="this.form.submit()"
+            class="border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-primary-500">
+            <option value="" {% if not sort %}selected{% endif %}>Mais vistos</option>
+            <option value="newest" {% if sort == 'newest' %}selected{% endif %}>Mais recentes</option>
+            <option value="price_asc" {% if sort == 'price_asc' %}selected{% endif %}>Menor preço</option>
+            <option value="price_desc" {% if sort == 'price_desc' %}selected{% endif %}>Maior preço</option>
+          </select>
+        </form>
+      </div>
+
+      {% if products %}
+      <!-- Grid de produtos -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for product in products %}
+        {% include "catalog/partials/product_card.html" %}
+        {% endfor %}
+      </div>
+
+      <!-- Paginação -->
+      {% if page_obj.has_other_pages %}
+      <nav class="mt-10 flex items-center justify-center gap-1">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}{% if q %}&q={{ q }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+          class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">← Anterior</a>
+        {% endif %}
+
+        {% for num in page_obj.paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="px-3 py-2 text-sm bg-primary-600 text-white rounded-lg">{{ num }}</span>
+        {% elif num >= page_obj.number|add:'-2' and num <= page_obj.number|add:'2' %}
+        <a href="?page={{ num }}{% if q %}&q={{ q }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+          class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">{{ num }}</a>
+        {% endif %}
+        {% endfor %}
+
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}{% if q %}&q={{ q }}{% endif %}{% if sort %}&sort={{ sort }}{% endif %}"
+          class="px-3 py-2 text-sm text-gray-600 hover:bg-gray-100 rounded-lg">Próxima →</a>
+        {% endif %}
+      </nav>
+      {% endif %}
+
+      {% else %}
+      <div class="text-center py-20 text-gray-400">
+        <svg class="w-16 h-16 mx-auto mb-4 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+        </svg>
+        <p class="text-lg font-semibold text-gray-600 mb-2">Nenhum produto encontrado</p>
+        <p class="text-sm">Tente buscar por outro termo ou explore outras categorias.</p>
+        <a href="{% url 'catalog:list' %}" class="mt-4 inline-block text-primary-600 hover:underline text-sm">Ver todos os produtos</a>
+      </div>
+      {% endif %}
+
+    </div>
+  </div>
+</div>
+
+<!-- FOOTER simples -->
+<footer class="bg-gray-900 text-gray-500 text-xs text-center py-6 mt-12">
+  &copy; 2025 Music Mais. Todos os direitos reservados.
+</footer>
+
+</body>
+</html>

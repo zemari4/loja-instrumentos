@@ -1,0 +1,609 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ SITE_NAME }} — Instrumentos Musicais</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: {
+              50:  '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe',
+              300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6',
+              600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a',
+            },
+          },
+          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+        },
+      },
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    .carousel-item { display: none; }
+    .carousel-item.active { display: block; }
+    /* mega-menu handled via Tailwind group-hover */
+    .cart-sidebar { transform: translateX(100%); transition: transform .3s ease; }
+    .cart-sidebar.open { transform: translateX(0); }
+  </style>
+</head>
+<body class="bg-white font-sans text-gray-800 antialiased">
+
+<!-- TOP BAR -->
+<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
+  <span>Frete grátis para compras acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros</span>
+</div>
+
+<!-- HEADER -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex items-center justify-between h-16 gap-4">
+
+      <!-- Logo -->
+      <a href="/" class="flex-shrink-0">
+        <span class="text-2xl font-extrabold text-primary-700 tracking-tight">
+          Music<span class="text-gray-800">Mais</span>
+        </span>
+      </a>
+
+      <!-- Busca desktop -->
+      <div class="hidden md:flex flex-1 max-w-xl">
+        <form method="get" action="/busca" class="relative w-full">
+          <input type="search" name="q" placeholder="Buscar instrumentos, marcas..."
+            class="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
+          <button type="submit" class="absolute right-0 top-0 h-full px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-r-full transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+          </button>
+        </form>
+      </div>
+
+      <!-- Ações direita -->
+      <div class="flex items-center gap-3">
+
+        <!-- Conta -->
+        {% if user.is_authenticated %}
+        <a href="{% url 'authentification:profile' %}" class="hidden sm:flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
+          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span class="truncate max-w-16">{{ user.first_name|default:user.username }}</span>
+        </a>
+        <a href="{% url 'authentification:logout' %}" class="hidden sm:flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
+          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
+          </svg>
+          <span>Sair</span>
+        </a>
+        {% else %}
+        <a href="{% url 'authentification:login' %}" class="hidden sm:flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
+          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+          </svg>
+          <span>Entrar</span>
+        </a>
+        {% endif %}
+
+        <!-- Carrinho -->
+        <button id="cart-btn"
+          class="relative flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
+          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+          </svg>
+          <span>Carrinho</span>
+          <span id="cart-count" class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-4 h-4 items-center justify-center leading-none
+            {% if cart_count %}flex{% else %}hidden{% endif %}">
+            {{ cart_count|default:0 }}
+          </span>
+        </button>
+
+        <!-- Hamburguer mobile -->
+        <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-600">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Busca mobile -->
+    <div class="md:hidden pb-3">
+      <form method="get" action="/busca" class="relative w-full">
+        <input type="search" name="q" placeholder="Buscar instrumentos..."
+          class="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        <button type="submit" class="absolute right-0 top-0 h-full px-3 bg-primary-600 text-white rounded-r-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- MEGA-MENU DE CATEGORIAS -->
+  <nav class="hidden md:block bg-primary-700 text-white">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <ul class="flex items-center h-10 gap-0 text-sm font-medium">
+
+        <li class="menu-item group relative">
+          <a href="/categoria/audio" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+            Áudio Profissional
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-64 grid grid-cols-2 gap-x-8 gap-y-1">
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Mixers e Mesas de Som</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Interfaces de Áudio</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Microfones</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Monitores de Estúdio</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Amplificadores</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Cabos e Acessórios</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Fones de Ouvido</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Pedais de Efeito</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">PA e Sonorização</a>
+          </div>
+        </li>
+
+        <li class="menu-item group relative">
+          <a href="/categoria/cordas" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+            Cordas
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-64 grid grid-cols-2 gap-x-8 gap-y-1">
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Guitarras</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Violões</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Baixos</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Ukuleles</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Banjos</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Violinos</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Cordas Avulsas</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Capas e Bags</a>
+          </div>
+        </li>
+
+        <li class="menu-item group relative">
+          <a href="/categoria/bateria" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+            Bateria e Percussão
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-48 grid grid-cols-1 gap-y-1">
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Baterias Acústicas</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Baterias Eletrônicas</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Pratos e Chimbal</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Peles e Acessórios</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Percussão Étnica</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Cajón</a>
+          </div>
+        </li>
+
+        <li class="menu-item group relative">
+          <a href="/categoria/teclados" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+            Pianos e Teclados
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-48 grid grid-cols-1 gap-y-1">
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Pianos Digitais</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Teclados Arranjadores</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Sintetizadores</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">MIDI Controllers</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Órgãos</a>
+          </div>
+        </li>
+
+        <li class="menu-item group relative">
+          <a href="/categoria/sopro" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+            Sopro
+            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+            </svg>
+          </a>
+          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-48 grid grid-cols-1 gap-y-1">
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Flautas</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Saxofones</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Trompetes</a>
+            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Clarinetas</a>
+          </div>
+        </li>
+
+        <li>
+          <a href="/categoria/iluminacao" class="flex items-center px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+            Iluminação
+          </a>
+        </li>
+
+        <li>
+          <a href="/promocoes" class="flex items-center px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap font-bold text-yellow-300">
+            🔥 Promoções
+          </a>
+        </li>
+      </ul>
+    </div>
+  </nav>
+</header>
+
+<!-- MENSAGENS FLASH -->
+{% if messages %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
+  {% for message in messages %}
+  <div class="rounded-lg px-4 py-3 text-sm flex items-center justify-between
+    {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+    {% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+    {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+    <span>{{ message }}</span>
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<!-- HERO CAROUSEL -->
+<section class="relative overflow-hidden bg-gray-100">
+  <div id="carousel" class="relative">
+
+    <div class="carousel-item active">
+      <div class="relative h-64 sm:h-80 md:h-96 lg:h-[480px] bg-gradient-to-r from-primary-900 via-primary-800 to-primary-600 flex items-center">
+        <div class="max-w-7xl mx-auto px-8 w-full">
+          <div class="max-w-lg">
+            <p class="text-primary-200 text-sm font-semibold uppercase tracking-wider mb-2">Lançamento</p>
+            <h2 class="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Guitarras<br/>até 30% OFF</h2>
+            <p class="text-primary-100 text-base mb-6">Os melhores instrumentos com o melhor preço.</p>
+            <a href="/categoria/cordas" class="inline-block bg-white text-primary-700 font-bold py-3 px-8 rounded-full hover:bg-primary-50 transition-colors shadow-lg">Ver ofertas</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="relative h-64 sm:h-80 md:h-96 lg:h-[480px] bg-gradient-to-r from-slate-900 via-slate-800 to-primary-700 flex items-center">
+        <div class="max-w-7xl mx-auto px-8 w-full">
+          <div class="max-w-lg">
+            <p class="text-blue-200 text-sm font-semibold uppercase tracking-wider mb-2">Destaque</p>
+            <h2 class="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Baterias<br/>Acústicas</h2>
+            <p class="text-blue-100 text-base mb-6">Kits completos para iniciantes e profissionais.</p>
+            <a href="/categoria/bateria" class="inline-block bg-primary-500 text-white font-bold py-3 px-8 rounded-full hover:bg-primary-400 transition-colors shadow-lg">Explorar</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="carousel-item">
+      <div class="relative h-64 sm:h-80 md:h-96 lg:h-[480px] bg-gradient-to-r from-primary-800 to-cyan-600 flex items-center">
+        <div class="max-w-7xl mx-auto px-8 w-full">
+          <div class="max-w-lg">
+            <p class="text-cyan-200 text-sm font-semibold uppercase tracking-wider mb-2">Novidade</p>
+            <h2 class="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Pianos Digitais<br/>Roland &amp; Yamaha</h2>
+            <p class="text-cyan-100 text-base mb-6">Toque como um profissional em casa.</p>
+            <a href="/categoria/teclados" class="inline-block bg-white text-primary-700 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors shadow-lg">Ver linha completa</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button onclick="moveCarousel(-1)"
+      class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow transition-colors z-10">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+      </svg>
+    </button>
+    <button onclick="moveCarousel(1)"
+      class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow transition-colors z-10">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+      </svg>
+    </button>
+
+    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+      <button onclick="goToSlide(0)" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/60 transition-all"></button>
+      <button onclick="goToSlide(1)" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/60 transition-all"></button>
+      <button onclick="goToSlide(2)" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/60 transition-all"></button>
+    </div>
+  </div>
+</section>
+
+<!-- BANNERS DE CATEGORIAS -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+    <a href="/categoria/audio" class="group relative overflow-hidden rounded-xl h-36 bg-primary-900 flex items-end p-4 shadow-md hover:shadow-xl transition-shadow">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+      <div class="relative z-10">
+        <p class="text-white font-bold text-lg leading-tight">Áudio<br/>Profissional</p>
+        <p class="text-primary-300 text-xs mt-0.5 group-hover:text-white transition-colors">Ver tudo →</p>
+      </div>
+    </a>
+    <a href="/categoria/cordas" class="group relative overflow-hidden rounded-xl h-36 bg-slate-800 flex items-end p-4 shadow-md hover:shadow-xl transition-shadow">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+      <div class="relative z-10">
+        <p class="text-white font-bold text-lg leading-tight">Guitarras<br/>e Violões</p>
+        <p class="text-primary-300 text-xs mt-0.5 group-hover:text-white transition-colors">Ver tudo →</p>
+      </div>
+    </a>
+    <a href="/categoria/bateria" class="group relative overflow-hidden rounded-xl h-36 bg-primary-800 flex items-end p-4 shadow-md hover:shadow-xl transition-shadow">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+      <div class="relative z-10">
+        <p class="text-white font-bold text-lg leading-tight">Bateria<br/>e Percussão</p>
+        <p class="text-primary-300 text-xs mt-0.5 group-hover:text-white transition-colors">Ver tudo →</p>
+      </div>
+    </a>
+  </div>
+</section>
+
+<!-- PRODUTOS MAIS VISUALIZADOS -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="flex items-center justify-between mb-6">
+    <h2 class="text-2xl font-bold text-gray-800">Produtos mais visualizados</h2>
+    <a href="/produtos" class="text-primary-600 hover:text-primary-800 text-sm font-medium transition-colors">Ver todos →</a>
+  </div>
+
+  {% if featured_products %}
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    {% for product in featured_products %}
+    <div class="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+      <div class="relative aspect-square bg-gray-50 overflow-hidden">
+        {% if product.main_image %}
+        <img src="{{ product.main_image.url }}" alt="{{ product.name }}"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+        {% else %}
+        <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+          <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+              d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+          </svg>
+        </div>
+        {% endif %}
+        {% if product.discount_percent %}
+        <span class="absolute top-2 left-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+          -{{ product.discount_percent }}%
+        </span>
+        {% endif %}
+      </div>
+      <div class="p-3 flex flex-col flex-1">
+        <p class="text-xs text-gray-400 mb-0.5">{{ product.brand.name }}</p>
+        <h3 class="text-sm font-semibold text-gray-800 leading-tight line-clamp-2 flex-1 mb-2">
+          <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+        </h3>
+        <div class="mb-3">
+          {% if product.original_price and product.original_price != product.price %}
+          <p class="text-xs text-gray-400 line-through">R$ {{ product.original_price|floatformat:2 }}</p>
+          {% endif %}
+          <p class="text-base font-bold text-primary-700">R$ {{ product.price|floatformat:2 }}</p>
+          <p class="text-xs text-gray-500">ou 12x de R$ {{ product.price_installment|floatformat:2 }}</p>
+        </div>
+        <button class="w-full bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors">
+          Adicionar ao carrinho
+        </button>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% else %}
+  <!-- Placeholder enquanto não há produtos cadastrados -->
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
+    {% for i in "123456" %}
+    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
+      <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+        </svg>
+      </div>
+      <div class="p-3">
+        <div class="h-3 bg-gray-200 rounded mb-2 w-2/3"></div>
+        <div class="h-4 bg-gray-200 rounded mb-1"></div>
+        <div class="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
+        <div class="h-8 bg-gray-200 rounded-lg"></div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+</section>
+
+<!-- BANNER PROMOCIONAL DUPLO -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-800 to-primary-600 p-8 flex items-center shadow-md">
+      <div>
+        <p class="text-primary-200 text-sm font-semibold uppercase tracking-wider mb-1">Especial</p>
+        <h3 class="text-white text-2xl font-extrabold mb-2">Equipamentos<br/>de Áudio</h3>
+        <p class="text-primary-100 text-sm mb-4">Interfaces, mixers e monitores<br/>para seu home studio.</p>
+        <a href="/categoria/audio" class="inline-block bg-white text-primary-700 font-bold py-2 px-6 rounded-full text-sm hover:bg-primary-50 transition-colors">Ver linha</a>
+      </div>
+    </div>
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-800 to-slate-600 p-8 flex items-center shadow-md">
+      <div>
+        <p class="text-slate-300 text-sm font-semibold uppercase tracking-wider mb-1">Destaque</p>
+        <h3 class="text-white text-2xl font-extrabold mb-2">Percussão<br/>Completa</h3>
+        <p class="text-slate-200 text-sm mb-4">Baterias, cajón e percussão étnica<br/>para todos os estilos.</p>
+        <a href="/categoria/bateria" class="inline-block bg-primary-500 text-white font-bold py-2 px-6 rounded-full text-sm hover:bg-primary-400 transition-colors">Explorar</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- BANNER CTA -->
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+  <div class="rounded-2xl bg-primary-700 px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
+    <div>
+      <h3 class="text-white text-2xl font-extrabold mb-1">Projetos de Sonorização</h3>
+      <p class="text-primary-200 text-sm">Planejamos o sistema de áudio ideal para seu espaço.</p>
+    </div>
+    <a href="/contato"
+      class="flex-shrink-0 bg-white text-primary-700 font-bold py-3 px-8 rounded-full hover:bg-primary-50 transition-colors shadow-md text-sm whitespace-nowrap">
+      Agende uma visita
+    </a>
+  </div>
+</section>
+
+<!-- DIFERENCIAIS -->
+<section class="bg-gray-50 py-10 mt-4">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+          </svg>
+        </div>
+        <p class="font-bold text-gray-800 text-sm">Frete Grátis</p>
+        <p class="text-gray-500 text-xs">Acima de R$&nbsp;299</p>
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+        </div>
+        <p class="font-bold text-gray-800 text-sm">Produto Original</p>
+        <p class="text-gray-500 text-xs">Garantia do fabricante</p>
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
+          </svg>
+        </div>
+        <p class="font-bold text-gray-800 text-sm">12x sem juros</p>
+        <p class="text-gray-500 text-xs">Nos principais cartões</p>
+      </div>
+      <div class="flex flex-col items-center gap-2">
+        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
+          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
+          </svg>
+        </div>
+        <p class="font-bold text-gray-800 text-sm">Suporte especializado</p>
+        <p class="text-gray-500 text-xs">Atendimento por músicos</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- FOOTER -->
+<footer class="bg-gray-900 text-gray-300 pt-12 pb-6 mt-8">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+      <div class="col-span-2 md:col-span-1">
+        <span class="text-2xl font-extrabold text-white tracking-tight">
+          Music<span class="text-primary-400">Mais</span>
+        </span>
+        <p class="text-sm mt-3 leading-relaxed text-gray-400">
+          {{ SITE_TAGLINE }}.
+        </p>
+      </div>
+      <div>
+        <h4 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Institucional</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/sobre" class="hover:text-primary-400 transition-colors">Sobre nós</a></li>
+          <li><a href="/privacidade" class="hover:text-primary-400 transition-colors">Política de privacidade</a></li>
+          <li><a href="/termos" class="hover:text-primary-400 transition-colors">Termos de uso</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Atendimento</h4>
+        <ul class="space-y-2 text-sm">
+          <li><a href="/faq" class="hover:text-primary-400 transition-colors">Dúvidas frequentes</a></li>
+          <li><a href="/trocas-devolucoes" class="hover:text-primary-400 transition-colors">Trocas e devoluções</a></li>
+          <li><a href="/contato" class="hover:text-primary-400 transition-colors">Contato</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Loja Física</h4>
+        <address class="not-italic text-sm text-gray-400 space-y-1 leading-relaxed">
+          <p>Rua dos Instrumentos, 123</p>
+          <p>São Paulo — SP</p>
+          <p class="mt-2">Seg–Sex: 9h às 18h</p>
+          <p>Sáb: 9h às 14h</p>
+        </address>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 pt-6 pb-4">
+      <p class="text-xs text-gray-500 mb-3">Formas de pagamento</p>
+      <div class="flex flex-wrap gap-2">
+        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Visa</span>
+        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Mastercard</span>
+        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Pix</span>
+        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Boleto</span>
+        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Elo</span>
+        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Amex</span>
+      </div>
+    </div>
+
+    <div class="border-t border-gray-800 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
+      <p>&copy; 2025 {{ SITE_NAME }}. Todos os direitos reservados.</p>
+      <p>CNPJ: 00.000.000/0001-00</p>
+    </div>
+  </div>
+</footer>
+
+<!-- SIDEBAR CARRINHO -->
+<div id="cart-overlay" class="fixed inset-0 bg-black/40 z-50 hidden"
+  onclick="document.getElementById('cart-sidebar').classList.remove('open'); this.classList.add('hidden')"></div>
+
+<aside id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col">
+  <div class="flex items-center justify-between p-4 border-b">
+    <h2 class="font-bold text-gray-800">Carrinho ({{ cart_count|default:0 }})</h2>
+    <button onclick="document.getElementById('cart-sidebar').classList.remove('open')" class="p-1 text-gray-500 hover:text-gray-800">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+      </svg>
+    </button>
+  </div>
+  <div class="flex-1 p-4 flex items-center justify-center text-gray-400 text-sm">
+    Seu carrinho está vazio.
+  </div>
+  <div class="p-4 border-t">
+    <a href="/carrinho" class="block w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-center text-sm transition-colors">
+      Ver carrinho
+    </a>
+  </div>
+</aside>
+
+<script>
+  let currentSlide = 0;
+  const slides = document.querySelectorAll('.carousel-item');
+  const dots = document.querySelectorAll('.carousel-dot');
+
+  function updateCarousel() {
+    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
+    dots.forEach((d, i) => {
+      d.classList.toggle('bg-white', i === currentSlide);
+      d.classList.toggle('scale-125', i === currentSlide);
+      d.classList.toggle('bg-white/60', i !== currentSlide);
+    });
+  }
+
+  function moveCarousel(dir) {
+    currentSlide = (currentSlide + dir + slides.length) % slides.length;
+    updateCarousel();
+  }
+
+  function goToSlide(n) { currentSlide = n; updateCarousel(); }
+
+  setInterval(() => moveCarousel(1), 5000);
+  updateCarousel();
+
+  document.getElementById('cart-btn').addEventListener('click', () => {
+    document.getElementById('cart-overlay').classList.remove('hidden');
+    document.getElementById('cart-sidebar').classList.add('open');
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,50 @@
+{% load humanize %}
+<div class="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
+  <a href="{{ product.get_absolute_url }}" class="relative aspect-square bg-gray-50 overflow-hidden block">
+    {% if product.main_image %}
+    <img src="{{ product.main_image.url }}" alt="{{ product.name }}"
+      class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+    {% else %}
+    <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+      <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+          d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+      </svg>
+    </div>
+    {% endif %}
+    {% if product.discount_percent %}
+    <span class="absolute top-2 left-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+      -{{ product.discount_percent }}%
+    </span>
+    {% endif %}
+    {% if not product.in_stock %}
+    <div class="absolute inset-0 bg-white/60 flex items-center justify-center">
+      <span class="text-xs font-bold text-gray-500 bg-white px-3 py-1 rounded-full border">Esgotado</span>
+    </div>
+    {% endif %}
+  </a>
+  <div class="p-3 flex flex-col flex-1">
+    <p class="text-xs text-gray-400 mb-0.5">{{ product.brand.name }}</p>
+    <h3 class="text-sm font-semibold text-gray-800 leading-tight line-clamp-2 flex-1 mb-2">
+      <a href="{{ product.get_absolute_url }}" class="hover:text-primary-700 transition-colors">{{ product.name }}</a>
+    </h3>
+    <div class="mb-3">
+      {% if product.discount_percent %}
+      <p class="text-xs text-gray-400 line-through">R$&nbsp;{{ product.original_price|floatformat:2 }}</p>
+      {% endif %}
+      <p class="text-base font-bold text-primary-700">R$&nbsp;{{ product.price|floatformat:2 }}</p>
+      <p class="text-xs text-gray-500">ou 12x de R$&nbsp;{{ product.price_installment|floatformat:2 }}</p>
+    </div>
+    {% if product.in_stock %}
+    <a href="{{ product.get_absolute_url }}"
+      class="w-full bg-primary-600 hover:bg-primary-700 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors text-center">
+      Ver produto
+    </a>
+    {% else %}
+    <button disabled
+      class="w-full bg-gray-200 text-gray-400 text-xs font-bold py-2 px-3 rounded-lg cursor-not-allowed">
+      Esgotado
+    </button>
+    {% endif %}
+  </div>
+</div>

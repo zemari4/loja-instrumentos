@@ -1,0 +1,215 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>{{ product.name }} — Music Mais</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',600:'#2563eb',700:'#1d4ed8',800:'#1e40af'}}}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>body{font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+<!-- TOP BAR -->
+<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
+  Frete grátis acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros
+</div>
+
+<!-- HEADER -->
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
+    <a href="/" class="text-2xl font-extrabold text-primary-700 tracking-tight flex-shrink-0">
+      Music<span class="text-gray-800">Mais</span>
+    </a>
+    <form method="get" action="{% url 'catalog:search' %}" class="flex-1 max-w-xl hidden md:block">
+      <div class="relative">
+        <input type="search" name="q" placeholder="Buscar instrumentos, marcas..."
+          class="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        <button type="submit" class="absolute right-0 top-0 h-full px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-r-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+    <nav class="flex items-center gap-4 text-sm text-gray-600">
+      {% if user.is_authenticated %}
+      <a href="{% url 'authentification:profile' %}" class="hover:text-primary-700">{{ user.first_name|default:user.username }}</a>
+      <a href="{% url 'authentification:logout' %}" class="hover:text-primary-700">Sair</a>
+      {% else %}
+      <a href="{% url 'authentification:login' %}" class="hover:text-primary-700">Entrar</a>
+      {% endif %}
+      <a href="{% url 'cart:cart' %}" class="hover:text-primary-700">
+        Carrinho{% if cart_count %} ({{ cart_count }}){% endif %}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+  <!-- Breadcrumb -->
+  <nav class="text-sm text-gray-500 mb-6">
+    <a href="/" class="hover:text-primary-600">Início</a>
+    <span class="mx-2">/</span>
+    <a href="{{ product.category.get_absolute_url }}" class="hover:text-primary-600">{{ product.category.name }}</a>
+    <span class="mx-2">/</span>
+    <span class="text-gray-800 font-medium truncate">{{ product.name }}</span>
+  </nav>
+
+  <!-- Produto principal -->
+  <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-10 mb-10">
+
+    <!-- Galeria de imagens -->
+    <div>
+      {% if images %}
+      <div class="aspect-square rounded-xl overflow-hidden bg-gray-50 mb-3">
+        <img id="main-img" src="{{ images.0.image.url }}" alt="{{ product.name }}"
+          class="w-full h-full object-contain" />
+      </div>
+      {% if images|length > 1 %}
+      <div class="flex gap-2 flex-wrap">
+        {% for img in images %}
+        <button onclick="document.getElementById('main-img').src='{{ img.image.url }}'"
+          class="w-16 h-16 rounded-lg overflow-hidden border-2 border-transparent hover:border-primary-500 transition-colors">
+          <img src="{{ img.image.url }}" alt="" class="w-full h-full object-cover" />
+        </button>
+        {% endfor %}
+      </div>
+      {% endif %}
+      {% else %}
+      <div class="aspect-square rounded-xl bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+        <svg class="w-24 h-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
+            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
+        </svg>
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Informações -->
+    <div>
+      <p class="text-sm text-gray-400 mb-1">{{ product.brand.name }}</p>
+      <h1 class="text-2xl font-bold text-gray-900 mb-1">{{ product.name }}</h1>
+      <p class="text-sm text-gray-400 mb-4">
+        Categoria: <a href="{{ product.category.get_absolute_url }}" class="hover:text-primary-600">{{ product.category.name }}</a>
+      </p>
+
+      <!-- Preço -->
+      <div class="mb-6">
+        {% if product.discount_percent %}
+        <p class="text-sm text-gray-400 line-through mb-0.5">R$&nbsp;{{ product.original_price|floatformat:2 }}</p>
+        <div class="flex items-center gap-2">
+          <p class="text-3xl font-extrabold text-primary-700">R$&nbsp;{{ product.price|floatformat:2 }}</p>
+          <span class="bg-primary-100 text-primary-700 text-sm font-bold px-2 py-0.5 rounded-full">
+            -{{ product.discount_percent }}%
+          </span>
+        </div>
+        {% else %}
+        <p class="text-3xl font-extrabold text-primary-700">R$&nbsp;{{ product.price|floatformat:2 }}</p>
+        {% endif %}
+        <p class="text-sm text-gray-500 mt-1">ou 12x de R$&nbsp;{{ product.price_installment|floatformat:2 }} sem juros</p>
+        <p class="text-sm text-green-600 mt-1">
+          Pix: R$&nbsp;{{ product.price|floatformat:2 }} <span class="text-gray-400">(à vista)</span>
+        </p>
+      </div>
+
+      <!-- Estoque -->
+      {% if product.in_stock %}
+      <p class="text-sm text-green-600 font-medium mb-4">
+        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+        </svg>
+        Em estoque ({{ product.stock }} unidade{{ product.stock|pluralize:",s" }})
+      </p>
+      {% else %}
+      <p class="text-sm text-red-500 font-medium mb-4">Produto esgotado</p>
+      {% endif %}
+
+      <!-- Adicionar ao carrinho -->
+      {% if product.in_stock %}
+      <form method="post" action="{% url 'cart:add' product.pk %}">
+        <input type="hidden" name="next" value="{{ request.path }}" />
+        {% csrf_token %}
+        <div class="flex gap-3 mb-4">
+          <div class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
+            <button type="button" onclick="adjustQty(-1)" class="px-3 py-2 text-gray-500 hover:bg-gray-100 text-lg font-bold">−</button>
+            <input type="number" name="qty" id="qty" value="1" min="1" max="{{ product.stock }}"
+              class="w-14 text-center py-2 text-sm font-semibold focus:outline-none border-x border-gray-300" />
+            <button type="button" onclick="adjustQty(1)" class="px-3 py-2 text-gray-500 hover:bg-gray-100 text-lg font-bold">+</button>
+          </div>
+          <button type="submit"
+            class="flex-1 bg-primary-600 hover:bg-primary-700 text-white font-bold py-2.5 px-6 rounded-lg transition-colors text-sm">
+            Adicionar ao carrinho
+          </button>
+        </div>
+      </form>
+      {% else %}
+      <button disabled class="w-full bg-gray-200 text-gray-400 font-bold py-2.5 px-6 rounded-lg text-sm cursor-not-allowed mb-4">
+        Produto esgotado
+      </button>
+      {% endif %}
+
+      <!-- Diferenciais -->
+      <div class="border-t border-gray-100 pt-4 space-y-2 text-sm text-gray-500">
+        <p class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Frete grátis acima de R$&nbsp;299
+        </p>
+        <p class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Produto original com garantia do fabricante
+        </p>
+        <p class="flex items-center gap-2">
+          <svg class="w-4 h-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+          </svg>
+          Troca em até 7 dias
+        </p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Descrição -->
+  {% if product.description %}
+  <div class="bg-white rounded-2xl shadow-sm p-6 md:p-8 mb-10">
+    <h2 class="text-lg font-bold text-gray-800 mb-4">Descrição</h2>
+    <div class="prose prose-sm max-w-none text-gray-600 leading-relaxed">
+      {{ product.description|linebreaks }}
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Produtos relacionados -->
+  {% if related %}
+  <div>
+    <h2 class="text-xl font-bold text-gray-800 mb-5">Você também pode gostar</h2>
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+      {% for product in related %}
+      {% include "catalog/partials/product_card.html" %}
+      {% endfor %}
+    </div>
+  </div>
+  {% endif %}
+
+</div>
+
+<footer class="bg-gray-900 text-gray-500 text-xs text-center py-6 mt-12">
+  &copy; 2025 Music Mais. Todos os direitos reservados.
+</footer>
+
+<script>
+  function adjustQty(delta) {
+    const input = document.getElementById('qty');
+    const max = parseInt(input.max) || 999;
+    input.value = Math.max(1, Math.min(max, parseInt(input.value || 1) + delta));
+  }
+</script>
+
+</body>
+</html>
