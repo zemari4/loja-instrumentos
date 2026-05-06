@@ -79,6 +79,6 @@ class InstrumentDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         ctx = super().get_context_data(**kwargs)
-        ctx["related"] = get_most_viewed(6).exclude(pk=self.object.pk)[:4]
+        ctx["related"] = get_most_viewed(limit=4, exclude_pk=self.object.pk)
         ctx["images"] = list(self.object.images.all())
         return ctx

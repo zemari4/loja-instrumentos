@@ -61,7 +61,7 @@ class RegisterView(FormView):
     def form_valid(self, form):
         user = form.save()
         get_or_create_profile(user)
-        login(self.request, user)
+        login(self.request, user, backend="django.contrib.auth.backends.ModelBackend")
         messages.success(self.request, "Cadastro realizado com sucesso!")
         return redirect("/")
 
