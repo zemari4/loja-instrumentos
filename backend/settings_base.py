@@ -133,6 +133,7 @@ THIRD_PARTY_APPS = [
     "allauth.socialaccount.providers.google",
     "django_ratelimit",
     "markdownify",
+    "import_export",
 ]
 
 LOCAL_APPS = [
@@ -145,6 +146,8 @@ LOCAL_APPS = [
     "catalog",
     "cart",
     "orders",
+    "dashboard",
+    "backstage",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS

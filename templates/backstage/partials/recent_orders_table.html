@@ -1,0 +1,44 @@
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b flex items-center justify-between">
+    <h2 class="font-semibold text-gray-700 text-sm">
+      <i class="fa-solid fa-clock-rotate-left mr-2 text-gray-400"></i>Últimos Pedidos
+    </h2>
+    <a href="{% url 'backstage:orders' %}" class="text-xs text-amber-600 hover:text-amber-700 font-medium">
+      Ver todos <i class="fa-solid fa-arrow-right ml-1"></i>
+    </a>
+  </div>
+  {% if orders %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-3">Pedido</th>
+          <th class="px-6 py-3">Cliente</th>
+          <th class="px-6 py-3">Valor</th>
+          <th class="px-6 py-3">Status</th>
+          <th class="px-6 py-3">Data</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for order in orders %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-3">
+            <a href="{% url 'backstage:order_detail' pk=order.pk %}" class="text-amber-600 hover:underline font-medium">#{{ order.pk }}</a>
+          </td>
+          <td class="px-6 py-3 text-gray-700">{{ order.customer.get_full_name|default:order.customer.username }}</td>
+          <td class="px-6 py-3 text-gray-700 font-medium">R$ {{ order.total_price|floatformat:2 }}</td>
+          <td class="px-6 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ order.status_css }}">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+          <td class="px-6 py-3 text-gray-500">{{ order.created_at|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {% include "backstage/includes/empty_state.html" with message="Nenhum pedido ainda." icon="fa-solid fa-bag-shopping" %}
+  {% endif %}
+</div>

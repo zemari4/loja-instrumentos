@@ -1,3 +1,4 @@
+from django.conf import settings
 from django.db import models
 from django.urls import reverse
 from simple_history.models import HistoricalRecords
@@ -84,6 +85,36 @@ class Instrument(models.Model):
     @property
     def in_stock(self):
         return self.stock > 0
+
+
+class StockMovement(models.Model):
+    class Type(models.TextChoices):
+        RESTOCK = "restock", "Reposição"
+        ADJUSTMENT = "adjustment", "Ajuste manual"
+        SALE = "sale", "Venda"
+        RETURN = "return", "Devolução"
+
+    instrument = models.ForeignKey(Instrument, on_delete=models.CASCADE, related_name="stock_movements")
+    quantity_change = models.IntegerField()
+    movement_type = models.CharField(max_length=20, choices=Type.choices)
+    notes = models.CharField(max_length=300, blank=True)
+    created_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="stock_movements",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Movimentação de Estoque"
+        verbose_name_plural = "Movimentações de Estoque"
+        ordering = ["-created_at"]
+
+    def __str__(self):
+        sign = "+" if self.quantity_change >= 0 else ""
+        return f"{self.instrument} {sign}{self.quantity_change} ({self.get_movement_type_display()})"
 
 
 class ProductImage(models.Model):

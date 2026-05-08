@@ -1,0 +1,38 @@
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b flex items-center justify-between">
+    <h2 class="font-semibold text-gray-700 text-sm">
+      <i class="fa-solid fa-ranking-star mr-2 text-gray-400"></i>Top Produtos Vendidos
+    </h2>
+  </div>
+  {% if top_products %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-3">#</th>
+          <th class="px-6 py-3">Produto</th>
+          <th class="px-6 py-3">Marca</th>
+          <th class="px-6 py-3">Vendas</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for product in top_products %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-3 text-gray-400 font-bold">{{ forloop.counter }}</td>
+          <td class="px-6 py-3 text-gray-700 font-medium">{{ product.instrument__name }}</td>
+          <td class="px-6 py-3 text-gray-500">{{ product.instrument__brand__name }}</td>
+          <td class="px-6 py-3">
+            <span class="inline-flex items-center gap-1 font-semibold text-gray-800">
+              <i class="fa-solid fa-arrow-trend-up text-green-400 text-xs"></i>
+              {{ product.total_sold }}
+            </span>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% else %}
+  {% include "backstage/includes/empty_state.html" with message="Nenhuma venda registrada ainda." icon="fa-solid fa-chart-bar" %}
+  {% endif %}
+</div>
