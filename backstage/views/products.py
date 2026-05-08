@@ -8,9 +8,11 @@ from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
 from backstage.forms import InstrumentForm, ProductImportForm, StockAdjustmentForm
 from backstage.mixins import BackstagePermissionMixin
-from catalog.models import Brand, Category, Instrument, StockMovement
+from catalog.models import Brand, Category, Instrument, ProductImage, StockMovement
 from catalog.resources import InstrumentResource
 from dashboard.services.inventory import LOW_STOCK_THRESHOLD
+
+MAX_PRODUCT_IMAGES = 5
 
 
 class InventoryListView(BackstagePermissionMixin, ListView):
@@ -221,3 +223,83 @@ class UpdateStockView(BackstagePermissionMixin, View):
         except (ValueError, TypeError):
             pass
         return self._render_cell(request, instrument)
+
+
+class _ImageActionMixin:
+    """Mixin para as views de gerenciamento de imagens de produto."""
+
+    def _images_response(self, instrument):
+        if self.request.htmx:
+            return render(self.request, "backstage/partials/product_images.html", {
+                "instrument": instrument,
+                "images": list(instrument.images.all()),
+                "max_images": MAX_PRODUCT_IMAGES,
+            })
+        return redirect("backstage:inventory_update", pk=instrument.pk)
+
+    def _get_image(self, image_pk):
+        """Retorna (image, None) ou (None, resposta de erro) se não encontrada."""
+        try:
+            return ProductImage.objects.select_related("instrument").get(pk=image_pk), None
+        except ProductImage.DoesNotExist:
+            if self.request.htmx:
+                return None, HttpResponse(status=204)
+            return None, redirect("backstage:inventory_update", pk=0)
+
+
+class ProductImageUploadView(BackstagePermissionMixin, View):
+    def post(self, request, pk):
+        instrument = get_object_or_404(Instrument, pk=pk)
+        files = request.FILES.getlist("images")
+        existing = instrument.images.count()
+        slots = MAX_PRODUCT_IMAGES - existing
+
+        if files and slots > 0:
+            count = min(len(files), slots)
+            for i, f in enumerate(files[:slots]):
+                ProductImage.objects.create(
+                    instrument=instrument,
+                    image=f,
+                    is_main=(existing == 0 and i == 0),
+                    order=existing + i,
+                )
+            messages.success(request, f"{count} foto(s) adicionada(s) com sucesso.")
+        elif not files:
+            messages.error(request, "Nenhuma imagem selecionada.")
+        else:
+            messages.warning(request, f"Limite de {MAX_PRODUCT_IMAGES} fotos atingido.")
+
+        return redirect("backstage:inventory_update", pk=pk)
+
+
+class ProductImageDeleteView(_ImageActionMixin, BackstagePermissionMixin, View):
+    def post(self, request, image_pk):
+        image, err = self._get_image(image_pk)
+        if err:
+            return err
+        instrument = image.instrument
+        was_main = image.is_main
+        image.image.delete(save=False)
+        image.delete()
+        if was_main:
+            first = instrument.images.order_by("order").first()
+            if first:
+                first.is_main = True
+                first.save(update_fields=["is_main"])
+        if not request.htmx:
+            messages.success(request, "Imagem removida.")
+        return self._images_response(instrument)
+
+
+class ProductImageSetMainView(_ImageActionMixin, BackstagePermissionMixin, View):
+    def post(self, request, image_pk):
+        image, err = self._get_image(image_pk)
+        if err:
+            return err
+        instrument = image.instrument
+        instrument.images.update(is_main=False)
+        image.is_main = True
+        image.save(update_fields=["is_main"])
+        if not request.htmx:
+            messages.success(request, "Foto principal atualizada.")
+        return self._images_response(instrument)
