@@ -1,0 +1,23 @@
+{# Topbar do backstage #}
+<header class="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between flex-shrink-0">
+
+  {# Botão hamburguer — mobile #}
+  <button @click="sidebarOpen = !sidebarOpen"
+          class="lg:hidden p-2 rounded-md text-gray-500 hover:bg-gray-100">
+    <i class="fa-solid fa-bars"></i>
+  </button>
+
+  {# Breadcrumb / título da página #}
+  <div class="hidden lg:block">
+    <h1 class="text-sm font-semibold text-gray-700">{% block page_title %}Backstage{% endblock %}</h1>
+  </div>
+
+  {# Ações à direita #}
+  <div class="flex items-center gap-3 ml-auto">
+    <span class="hidden sm:inline text-xs text-gray-400 bg-gray-100 px-2 py-1 rounded">
+      <i class="fa-solid fa-shield-halved mr-1"></i>Staff
+    </span>
+    <span class="text-sm text-gray-600 font-medium">{{ request.user.get_full_name|default:request.user.username }}</span>
+  </div>
+
+</header>

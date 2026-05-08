@@ -1,0 +1,79 @@
+{% extends "backstage/layouts/base.html" %}
+
+{% block title %}Clientes{% endblock %}
+{% block page_title %}Clientes{% endblock %}
+
+{% block content %}
+
+{# Busca #}
+<div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+  <form method="get" class="flex gap-3 items-end">
+    <div class="flex-1 max-w-sm">
+      <label class="block text-xs font-medium text-gray-500 mb-1">Buscar cliente</label>
+      <input type="text"
+             name="q"
+             value="{{ search }}"
+             placeholder="Nome ou e-mail..."
+             class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+    </div>
+    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+      <i class="fa-solid fa-magnifying-glass mr-1"></i>Buscar
+    </button>
+    {% if search %}
+    <a href="{% url 'backstage:customers' %}" class="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-xmark mr-1"></i>Limpar
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+{# Tabela de clientes #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b">
+    <h2 class="font-semibold text-gray-700 text-sm">
+      <i class="fa-solid fa-users mr-2 text-gray-400"></i>
+      Clientes com Pedidos ({{ page_obj.paginator.count }})
+    </h2>
+  </div>
+
+  {% if customers %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-3">Cliente</th>
+          <th class="px-6 py-3">E-mail</th>
+          <th class="px-6 py-3">Pedidos</th>
+          <th class="px-6 py-3">Total Gasto</th>
+          <th class="px-6 py-3">Membro desde</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for customer in customers %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-3">
+            <div class="flex items-center gap-3">
+              <div class="w-8 h-8 rounded-full bg-amber-100 flex items-center justify-center flex-shrink-0">
+                <span class="text-amber-700 text-xs font-bold">{{ customer.username|slice:":1"|upper }}</span>
+              </div>
+              <span class="font-medium text-gray-800">{{ customer.get_full_name|default:customer.username }}</span>
+            </div>
+          </td>
+          <td class="px-6 py-3 text-gray-500">{{ customer.email }}</td>
+          <td class="px-6 py-3 font-semibold text-gray-800">{{ customer.order_count }}</td>
+          <td class="px-6 py-3 font-semibold text-gray-800">
+            R$ {{ customer.total_spent|default:0|floatformat:2 }}
+          </td>
+          <td class="px-6 py-3 text-gray-500">{{ customer.date_joined|date:"d/m/Y" }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "backstage/includes/pagination.html" %}
+  {% else %}
+  {% include "backstage/includes/empty_state.html" with message="Nenhum cliente com pedidos encontrado." icon="fa-solid fa-users" %}
+  {% endif %}
+</div>
+
+{% endblock %}
