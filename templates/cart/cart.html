@@ -11,12 +11,12 @@
 </head>
 <body class="bg-gray-50 text-gray-800 antialiased">
 
-<!-- TOP BAR -->
+{# TOP BAR #}
 <div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
   Frete grátis acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros
 </div>
 
-<!-- HEADER -->
+{# HEADER #}
 <header class="bg-white shadow-sm sticky top-0 z-40">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
     <a href="{% url 'home:index' %}" class="text-2xl font-extrabold text-primary-700 tracking-tight flex-shrink-0">
@@ -47,7 +47,7 @@
   </div>
 </header>
 
-<!-- MENSAGENS FLASH -->
+{# MENSAGENS FLASH #}
 {% if messages %}
 <div class="max-w-5xl mx-auto px-4 pt-4">
   {% for msg in messages %}
@@ -71,12 +71,12 @@
   {% if items %}
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
 
-    <!-- Lista de itens -->
+    {# Lista de itens #}
     <div class="lg:col-span-2 space-y-4">
       {% for item in items %}
       <div class="bg-white rounded-2xl shadow-sm p-4 flex gap-4 items-start">
 
-        <!-- Imagem -->
+        {# Imagem #}
         <a href="{% url 'catalog:detail' item.slug %}" class="flex-shrink-0">
           {% if item.main_image %}
           <img src="{{ item.main_image.url }}" alt="{{ item.name }}"
@@ -91,7 +91,7 @@
           {% endif %}
         </a>
 
-        <!-- Info -->
+        {# Info #}
         <div class="flex-1 min-w-0">
           <a href="{% url 'catalog:detail' item.slug %}"
             class="font-semibold text-gray-800 hover:text-primary-700 line-clamp-2 text-sm leading-snug">
@@ -99,7 +99,7 @@
           </a>
           <p class="text-primary-700 font-bold mt-1">R$&nbsp;{{ item.price|floatformat:2 }}</p>
 
-          <!-- Qty + remover -->
+          {# Qty + remover #}
           <div class="flex items-center gap-3 mt-3">
             <form method="post" action="{% url 'cart:update' item.pk %}" class="flex items-center border border-gray-300 rounded-lg overflow-hidden">
               {% csrf_token %}
@@ -117,7 +117,7 @@
           </div>
         </div>
 
-        <!-- Subtotal -->
+        {# Subtotal #}
         <div class="text-right flex-shrink-0">
           <p class="text-sm text-gray-400 text-xs">Subtotal</p>
           <p class="font-bold text-gray-900">R$&nbsp;{{ item.subtotal|floatformat:2 }}</p>
@@ -125,13 +125,13 @@
       </div>
       {% endfor %}
 
-      <!-- Continuar comprando -->
+      {# Continuar comprando #}
       <div class="pt-2">
         <a href="{% url 'catalog:list' %}" class="text-sm text-primary-600 hover:underline">← Continuar comprando</a>
       </div>
     </div>
 
-    <!-- Resumo do pedido -->
+    {# Resumo do pedido #}
     <div class="lg:col-span-1">
       <div class="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
         <h2 class="font-bold text-gray-800 text-lg mb-4">Resumo do pedido</h2>
@@ -158,10 +158,10 @@
           Faltam R$&nbsp;{{ 299|add:0|floatformat:2 }} para frete grátis
         </p>
         {% endif %}
-        <button disabled
-          class="mt-5 block w-full bg-primary-600 opacity-60 text-white font-bold py-3 rounded-xl text-center text-sm cursor-not-allowed">
-          Finalizar pedido (em breve)
-        </button>
+        <a href="{% url 'orders:checkout' %}"
+          class="mt-5 block w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-center text-sm transition-colors">
+          Finalizar pedido
+        </a>
         <p class="text-xs text-gray-400 text-center mt-3">Pagamento seguro via Pix ou cartão</p>
       </div>
     </div>
@@ -169,7 +169,7 @@
   </div>
 
   {% else %}
-  <!-- Carrinho vazio -->
+  {# Carrinho vazio #}
   <div class="text-center py-20">
     <svg class="w-20 h-20 text-gray-200 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
