@@ -4,7 +4,25 @@ from django.utils.text import slugify
 from catalog.models import Instrument, StockMovement
 
 
+class BRDecimalField(forms.DecimalField):
+    """DecimalField que aceita formato brasileiro (4.200,59) e padrão (4200.59)."""
+
+    def __init__(self, *args, **kwargs):
+        kwargs.setdefault("widget", forms.TextInput(attrs={"inputmode": "decimal"}))
+        super().__init__(*args, **kwargs)
+
+    def to_python(self, value):
+        if isinstance(value, str) and "," in value:
+            value = value.replace(".", "").replace(",", ".")
+        return super().to_python(value)
+
+
 class InstrumentForm(forms.ModelForm):
+    price = BRDecimalField(max_digits=10, decimal_places=2, label="Preço (R$)")
+    original_price = BRDecimalField(
+        max_digits=10, decimal_places=2, required=False, label="Preço original (R$)"
+    )
+
     class Meta:
         model = Instrument
         fields = [

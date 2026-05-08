@@ -1,0 +1,132 @@
+<div id="product-images-section" class="bg-white rounded-xl shadow-sm p-6 mb-4">
+
+  <div class="flex items-center justify-between mb-4 pb-2 border-b">
+    <h3 class="text-sm font-semibold text-gray-700">Fotos do produto</h3>
+    <span class="text-xs text-gray-400">{{ images|length }}/{{ max_images }} imagens</span>
+  </div>
+
+  {% if images %}
+  <div class="grid grid-cols-5 gap-3 mb-4">
+    {% for img in images %}
+    <div class="relative group rounded-lg overflow-hidden border border-gray-100">
+      <img src="{{ img.image.url }}"
+           alt="Foto {{ forloop.counter }}"
+           class="w-full h-20 object-cover">
+      {% if img.is_main %}
+      <span class="absolute top-1 left-1 bg-amber-500 text-white text-xs px-1.5 py-0.5 rounded font-medium leading-none">
+        Principal
+      </span>
+      {% endif %}
+      <div class="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-1.5 p-1">
+        {% if not img.is_main %}
+        <form method="post"
+              action="{% url 'backstage:product_image_set_main' img.pk %}"
+              hx-post="{% url 'backstage:product_image_set_main' img.pk %}"
+              hx-target="#product-images-section"
+              hx-swap="outerHTML"
+              class="w-full">
+          {% csrf_token %}
+          <button type="submit"
+                  class="w-full text-center text-xs bg-amber-500 hover:bg-amber-600 text-white px-2 py-1 rounded transition-colors">
+            <i class="fa-solid fa-star"></i> Principal
+          </button>
+        </form>
+        {% endif %}
+        <form method="post"
+              action="{% url 'backstage:product_image_delete' img.pk %}"
+              hx-post="{% url 'backstage:product_image_delete' img.pk %}"
+              hx-target="#product-images-section"
+              hx-swap="outerHTML"
+              class="w-full"
+              x-data>
+          {% csrf_token %}
+          <button type="submit"
+                  class="w-full text-center text-xs bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded transition-colors"
+                  @click.prevent="confirm('Remover esta imagem?') && $el.closest('form').requestSubmit()">
+            <i class="fa-solid fa-trash"></i> Remover
+          </button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+
+  {% if images|length < max_images %}
+  <div x-data="{
+    dragging: false,
+    previews: [],
+    error: '',
+    slots: {{ max_images }} - {{ images|length }},
+    handleChange(fileList) {
+      this.error = '';
+      const valid = Array.from(fileList).filter(f => f.type.startsWith('image/'));
+      if (!valid.length) { this.error = 'Selecione imagens válidas (JPG, PNG, WEBP).'; return; }
+      if (valid.length > this.slots) {
+        this.error = 'Máximo de ' + this.slots + ' foto(s). As demais serão ignoradas.';
+      }
+      this.previews = valid.slice(0, this.slots).map(f => URL.createObjectURL(f));
+    },
+    handleDrop(e) {
+      this.dragging = false;
+      const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+      if (!files.length) return;
+      const limited = files.slice(0, this.slots);
+      const dt = new DataTransfer();
+      limited.forEach(f => dt.items.add(f));
+      this.$refs.fileInput.files = dt.files;
+      this.handleChange(this.$refs.fileInput.files);
+    }
+  }">
+    <form method="post"
+          action="{% url 'backstage:product_image_upload' instrument.pk %}"
+          enctype="multipart/form-data">
+      {% csrf_token %}
+
+      <input type="file" name="images" multiple accept="image/*"
+             x-ref="fileInput"
+             class="hidden"
+             @change="handleChange($event.target.files)">
+
+      <div class="border-2 border-dashed rounded-xl p-6 text-center cursor-pointer transition-colors"
+           :class="dragging ? 'border-amber-400 bg-amber-50' : 'border-gray-200 hover:border-gray-300 bg-gray-50'"
+           @dragover.prevent="dragging = true"
+           @dragleave.prevent="dragging = false"
+           @drop.prevent="handleDrop($event)"
+           @click="$refs.fileInput.click()">
+
+        <div x-show="!previews.length">
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-gray-300 mb-2"></i>
+          <p class="text-sm text-gray-500">
+            Arraste fotos aqui ou <span class="text-amber-500 font-medium">clique para selecionar</span>
+          </p>
+          <p class="text-xs text-gray-400 mt-1">
+            Até <span x-text="slots"></span> foto(s) · JPG, PNG, WEBP
+          </p>
+        </div>
+
+        <div x-show="previews.length" @click.stop class="flex flex-wrap gap-2 justify-center">
+          <template x-for="(src, i) in previews" :key="i">
+            <img :src="src" class="h-16 w-16 object-cover rounded-lg border border-gray-200">
+          </template>
+        </div>
+      </div>
+
+      <div class="mt-2 flex items-center gap-3" x-show="previews.length || error">
+        <p x-show="error" x-text="error" class="text-xs text-amber-600 flex-1" x-cloak></p>
+        <button type="submit"
+                x-show="previews.length"
+                class="ml-auto px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-xs font-medium rounded-lg transition-colors">
+          <i class="fa-solid fa-upload mr-1"></i>Enviar fotos
+        </button>
+      </div>
+    </form>
+  </div>
+  {% else %}
+  <p class="text-xs text-gray-400 text-center py-2">
+    <i class="fa-solid fa-circle-check text-green-400 mr-1"></i>
+    Limite de {{ max_images }} fotos atingido. Remova uma para adicionar outra.
+  </p>
+  {% endif %}
+
+</div>

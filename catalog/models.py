@@ -122,11 +122,15 @@ class ProductImage(models.Model):
     image = models.ImageField(upload_to="products/")
     is_main = models.BooleanField(default=False)
     order = models.PositiveSmallIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Imagem do Produto"
         verbose_name_plural = "Imagens do Produto"
         ordering = ["-is_main", "order"]
+        indexes = [
+            models.Index(fields=["instrument", "is_main"], name="prodimg_inst_ismain_idx"),
+        ]
 
     def __str__(self):
         return f"Imagem de {self.instrument.name}"

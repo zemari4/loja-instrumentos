@@ -5,7 +5,7 @@
 
 {% block content %}
 <div class="max-w-2xl">
-  <form method="post" novalidate>
+  <form id="product-form" method="post" novalidate>
     {% csrf_token %}
 
     {# Identificação #}
@@ -88,8 +88,9 @@
           <label for="{{ form.price.id_for_label }}" class="block text-xs font-medium text-gray-600 mb-1">
             Preço (R$) <span class="text-red-500">*</span>
           </label>
-          <input type="number" step="0.01" name="{{ form.price.html_name }}" id="{{ form.price.id_for_label }}"
+          <input type="text" inputmode="decimal" name="{{ form.price.html_name }}" id="{{ form.price.id_for_label }}"
                  value="{{ form.price.value|default:'' }}"
+                 placeholder="Ex: 4.200,59"
                  class="w-full text-sm border {% if form.price.errors %}border-red-400{% else %}border-gray-200{% endif %} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
           {% if form.price.errors %}<p class="mt-1 text-xs text-red-500">{{ form.price.errors.0 }}</p>{% endif %}
         </div>
@@ -97,8 +98,9 @@
           <label for="{{ form.original_price.id_for_label }}" class="block text-xs font-medium text-gray-600 mb-1">
             Preço original (R$)
           </label>
-          <input type="number" step="0.01" name="{{ form.original_price.html_name }}" id="{{ form.original_price.id_for_label }}"
+          <input type="text" inputmode="decimal" name="{{ form.original_price.html_name }}" id="{{ form.original_price.id_for_label }}"
                  value="{{ form.original_price.value|default:'' }}"
+                 placeholder="Ex: 5.000,00"
                  class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
         </div>
         <div>
@@ -132,17 +134,23 @@
       </div>
     </div>
 
-    {# Ações #}
-    <div class="flex items-center gap-3">
-      <button type="submit"
-              class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
-        {{ submit_label }}
-      </button>
-      <a href="{% url 'backstage:inventory' %}"
-         class="px-6 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
-        Cancelar
-      </a>
-    </div>
   </form>
+
+  {# Fotos — fora do form principal para evitar nesting de forms #}
+  {% if object %}
+  {% include "backstage/partials/product_images.html" with instrument=object images=object.images.all max_images=5 %}
+  {% endif %}
+
+  {# Ações — form="product-form" associa ao form principal mesmo estando fora dele #}
+  <div class="flex items-center gap-3 mt-4">
+    <button type="submit" form="product-form"
+            class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+      {{ submit_label }}
+    </button>
+    <a href="{% url 'backstage:inventory' %}"
+       class="px-6 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      Cancelar
+    </a>
+  </div>
 </div>
 {% endblock %}
