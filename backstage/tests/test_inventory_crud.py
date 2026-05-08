@@ -11,6 +11,26 @@ from catalog.models import Brand, Category, Instrument, StockMovement
 fake = Faker("pt_BR")
 
 
+def _fake_price_decimal():
+    """Retorna um Decimal de preço aleatório com 2 casas decimais."""
+    return Decimal(str(fake.pydecimal(left_digits=4, right_digits=2, positive=True, min_value=100)))
+
+
+def _to_br_with_thousands(value: Decimal) -> str:
+    """Formata Decimal como string BR com separador de milhar: '4.200,59'."""
+    int_part, dec_part = str(value).split(".")
+    dec_part = dec_part.ljust(2, "0")[:2]
+    formatted_int = f"{int(int_part):,}".replace(",", ".")
+    return f"{formatted_int},{dec_part}"
+
+
+def _to_br_no_thousands(value: Decimal) -> str:
+    """Formata Decimal como string BR sem separador de milhar: '999,90'."""
+    int_part, dec_part = str(value).split(".")
+    dec_part = dec_part.ljust(2, "0")[:2]
+    return f"{int_part},{dec_part}"
+
+
 @pytest.fixture
 def staff_user(db):
     return User.objects.create_user(
@@ -46,14 +66,15 @@ class TestProductCreateView:
     def test_creates_instrument(self, client, staff_user, category, brand):
         client.force_login(staff_user)
         name = fake.word().capitalize()
+        price = _fake_price_decimal()
         data = {
             "name": name,
             "slug": "",
             "category": category.pk,
             "brand": brand.pk,
-            "price": "1500.00",
+            "price": str(price),
             "original_price": "",
-            "stock": 10,
+            "stock": fake.random_int(min=1, max=50),
             "description": "",
             "is_active": "on",
             "is_featured": "",
@@ -64,15 +85,15 @@ class TestProductCreateView:
 
     def test_auto_generates_slug(self, client, staff_user, category, brand):
         client.force_login(staff_user)
-        name = "Guitarra Elétrica Teste"
+        name = fake.name()
         data = {
             "name": name,
             "slug": "",
             "category": category.pk,
             "brand": brand.pk,
-            "price": "2000.00",
+            "price": str(_fake_price_decimal()),
             "original_price": "",
-            "stock": 5,
+            "stock": fake.random_int(min=1, max=20),
             "description": "",
             "is_active": "on",
         }
@@ -86,6 +107,49 @@ class TestProductCreateView:
         response = client.post(reverse("backstage:inventory_create"), {})
         assert response.status_code == 200
         assert "form" in response.context
+
+    def test_accepts_br_price_format(self, client, staff_user, category, brand):
+        client.force_login(staff_user)
+        name = fake.word().capitalize()
+        price = _fake_price_decimal()
+        orig = _fake_price_decimal()
+        data = {
+            "name": name,
+            "slug": "",
+            "category": category.pk,
+            "brand": brand.pk,
+            "price": _to_br_with_thousands(price),
+            "original_price": _to_br_with_thousands(orig),
+            "stock": fake.random_int(min=1, max=10),
+            "description": "",
+            "is_active": "on",
+        }
+        response = client.post(reverse("backstage:inventory_create"), data)
+        assert response.status_code == 302
+        inst = Instrument.objects.get(name=name)
+        assert inst.price == price.quantize(Decimal("0.01"))
+        assert inst.original_price == orig.quantize(Decimal("0.01"))
+
+    def test_accepts_br_price_without_thousands(self, client, staff_user, category, brand):
+        client.force_login(staff_user)
+        name = fake.word().capitalize()
+        int_val = fake.random_int(min=100, max=999)
+        dec_val = fake.random_int(min=0, max=99)
+        expected = Decimal(f"{int_val}.{dec_val:02d}")
+        data = {
+            "name": name,
+            "slug": "",
+            "category": category.pk,
+            "brand": brand.pk,
+            "price": _to_br_no_thousands(expected),
+            "original_price": "",
+            "stock": fake.random_int(min=1, max=10),
+            "description": "",
+            "is_active": "on",
+        }
+        client.post(reverse("backstage:inventory_create"), data)
+        inst = Instrument.objects.get(name=name)
+        assert inst.price == expected
 
 
 class TestProductUpdateView:
@@ -167,7 +231,8 @@ class TestStockAdjustmentView:
 
     def test_negative_adjustment_decreases_stock(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        instrument.stock = 20
+        initial = fake.random_int(min=10, max=50)
+        instrument.stock = initial
         instrument.save()
         qty = fake.random_int(min=1, max=5)
         client.post(
@@ -175,15 +240,15 @@ class TestStockAdjustmentView:
             {"quantity_change": -qty, "movement_type": StockMovement.Type.SALE, "notes": ""},
         )
         instrument.refresh_from_db()
-        assert instrument.stock == 20 - qty
+        assert instrument.stock == initial - qty
 
     def test_stock_never_goes_below_zero(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        instrument.stock = 2
+        instrument.stock = fake.random_int(min=1, max=5)
         instrument.save()
         client.post(
             reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}),
-            {"quantity_change": -999, "movement_type": StockMovement.Type.SALE, "notes": ""},
+            {"quantity_change": -99999, "movement_type": StockMovement.Type.SALE, "notes": ""},
         )
         instrument.refresh_from_db()
         assert instrument.stock == 0
@@ -192,9 +257,10 @@ class TestStockAdjustmentView:
         client.force_login(staff_user)
         before = StockMovement.objects.filter(instrument=instrument).count()
         note = fake.sentence()
+        qty = fake.random_int(min=1, max=20)
         client.post(
             reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}),
-            {"quantity_change": 5, "movement_type": StockMovement.Type.RESTOCK, "notes": note},
+            {"quantity_change": qty, "movement_type": StockMovement.Type.RESTOCK, "notes": note},
         )
         assert StockMovement.objects.filter(instrument=instrument).count() == before + 1
         mov = StockMovement.objects.filter(instrument=instrument).latest("created_at")
@@ -263,9 +329,12 @@ class TestProductImportView:
     def test_import_valid_csv(self, client, staff_user, category, brand):
         client.force_login(staff_user)
         name = fake.word().capitalize()
+        slug = fake.slug()
+        price = fake.random_int(min=100, max=9999)
+        stock = fake.random_int(min=1, max=50)
         csv_content = (
             "id,name,slug,categoria,marca,price,original_price,stock,is_active,is_featured,description\n"
-            f",{name},slug-importado-01,{category.name},{brand.name},999.00,,15,True,False,\n"
+            f",{name},{slug},{category.name},{brand.name},{price}.00,,{stock},True,False,\n"
         )
         csv_file = io.BytesIO(csv_content.encode("utf-8"))
         csv_file.name = "produtos.csv"
@@ -291,12 +360,12 @@ class TestProductImportView:
         new_brand_name = fake.company()
         csv_content = (
             "id,name,slug,categoria,marca,price,original_price,stock,is_active,is_featured,description\n"
-            f",{fake.word()},slug-nova-marca,{category.name},{new_brand_name},799.00,,5,True,False,\n"
+            f",{fake.word()},{fake.slug()},{category.name},{new_brand_name},"
+            f"{fake.random_int(min=100, max=5000)}.00,,{fake.random_int(min=1, max=20)},True,False,\n"
         )
         csv_file = io.BytesIO(csv_content.encode("utf-8"))
         csv_file.name = "produtos.csv"
         client.post(reverse("backstage:inventory_import"), {"import_file": csv_file})
-        from catalog.models import Brand
         assert Brand.objects.filter(name=new_brand_name).exists()
 
     def test_import_creates_missing_category(self, client, staff_user, brand):
@@ -304,12 +373,12 @@ class TestProductImportView:
         new_cat_name = fake.word().capitalize()
         csv_content = (
             "id,name,slug,categoria,marca,price,original_price,stock,is_active,is_featured,description\n"
-            f",{fake.word()},slug-nova-cat,{new_cat_name},{brand.name},599.00,,3,True,False,\n"
+            f",{fake.word()},{fake.slug()},{new_cat_name},{brand.name},"
+            f"{fake.random_int(min=100, max=5000)}.00,,{fake.random_int(min=1, max=20)},True,False,\n"
         )
         csv_file = io.BytesIO(csv_content.encode("utf-8"))
         csv_file.name = "produtos.csv"
         client.post(reverse("backstage:inventory_import"), {"import_file": csv_file})
-        from catalog.models import Category
         assert Category.objects.filter(name=new_cat_name).exists()
 
     def test_requires_staff(self, client, regular_user):

@@ -1,0 +1,1 @@
+Corrige campo de preço que aparecia vazio ao editar produto e passa a aceitar formato brasileiro (ex: 4.200,59). Corrige upload de fotos que não salvava imagens por falha no envio multipart via HTMX. Corrige imagens existentes sem flag principal que impediam exibição no catálogo.

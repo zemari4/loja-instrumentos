@@ -15,6 +15,9 @@ from .views.products import (
     ProductCreateView,
     ProductDeleteView,
     ProductExportView,
+    ProductImageDeleteView,
+    ProductImageSetMainView,
+    ProductImageUploadView,
     ProductImportView,
     ProductUpdateView,
     StockAdjustmentView,
@@ -42,6 +45,10 @@ urlpatterns = [
     path("estoque/<int:pk>/historico/", StockHistoryView.as_view(), name="stock_history"),
     path("estoque/importar/", ProductImportView.as_view(), name="inventory_import"),
     path("estoque/exportar/", ProductExportView.as_view(), name="inventory_export"),
+    # Imagens do produto
+    path("estoque/<int:pk>/imagens/upload/", ProductImageUploadView.as_view(), name="product_image_upload"),
+    path("estoque/imagens/<int:image_pk>/excluir/", ProductImageDeleteView.as_view(), name="product_image_delete"),
+    path("estoque/imagens/<int:image_pk>/principal/", ProductImageSetMainView.as_view(), name="product_image_set_main"),
     # Pedidos
     path("pedidos/", OrderListView.as_view(), name="orders"),
     path("pedidos/<int:pk>/", OrderDetailView.as_view(), name="order_detail"),
