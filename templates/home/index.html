@@ -1,10 +1,12 @@
-{% load humanize %}
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>{{ SITE_NAME }} — Instrumentos Musicais</title>
+  <meta name="description" content="Instrumentos musicais com os melhores preços — guitarras, baterias, teclados, áudio profissional e muito mais. Frete grátis acima de R$ 299." />
+  <meta name="theme-color" content="#1a35d8" />
+
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
@@ -12,224 +14,267 @@
         extend: {
           colors: {
             primary: {
-              50:  '#eff6ff', 100: '#dbeafe', 200: '#bfdbfe',
-              300: '#93c5fd', 400: '#60a5fa', 500: '#3b82f6',
-              600: '#2563eb', 700: '#1d4ed8', 800: '#1e40af', 900: '#1e3a8a',
+              50:'#eef4ff',100:'#dbe6ff',200:'#bcd1ff',300:'#8eb0ff',400:'#5a85ff',
+              500:'#3361ff',600:'#1f44f5',700:'#1a35d8',800:'#1c2fae',900:'#1d2f89',950:'#141d54',
             },
+            ink: {
+              50:'#f8fafc',100:'#f1f5f9',200:'#e2e8f0',300:'#cbd5e1',400:'#94a3b8',
+              500:'#64748b',600:'#475569',700:'#334155',800:'#1e293b',900:'#0f172a',950:'#020617',
+            },
+            accent: { 400:'#fbbf24', 500:'#f59e0b', 600:'#d97706' },
+            success:{ 50:'#ecfdf5', 500:'#10b981', 700:'#047857' },
+            danger: { 50:'#fef2f2', 500:'#ef4444', 700:'#b91c1c' },
+            info:   { 50:'#eff6ff', 500:'#3b82f6', 700:'#1d4ed8' },
           },
-          fontFamily: { sans: ['Inter', 'system-ui', 'sans-serif'] },
+          fontFamily: {
+            sans: ['Inter','system-ui','sans-serif'],
+            display: ['"Plus Jakarta Sans"','Inter','system-ui','sans-serif'],
+          },
+          fontSize: {
+            'display-xl':['3.75rem',{lineHeight:'1.05',letterSpacing:'-0.025em',fontWeight:'800'}],
+            'display-lg':['3rem',   {lineHeight:'1.1', letterSpacing:'-0.025em',fontWeight:'800'}],
+            'display':   ['2.25rem',{lineHeight:'1.15',letterSpacing:'-0.02em', fontWeight:'700'}],
+          },
+          spacing: { '18': '4.5rem', '22': '5.5rem' },
+          borderRadius: { '3xl': '28px' },
+          boxShadow: {
+            'sm':       '0 1px 3px 0 rgb(15 23 42 / 0.08), 0 1px 2px -1px rgb(15 23 42 / 0.05)',
+            'DEFAULT':  '0 4px 8px -2px rgb(15 23 42 / 0.08), 0 2px 4px -2px rgb(15 23 42 / 0.04)',
+            'md':       '0 8px 16px -4px rgb(15 23 42 / 0.10), 0 4px 8px -4px rgb(15 23 42 / 0.06)',
+            'lg':       '0 16px 32px -8px rgb(15 23 42 / 0.12), 0 8px 16px -8px rgb(15 23 42 / 0.08)',
+            'primary':  '0 8px 24px -4px rgb(31 68 245 / 0.30)',
+            'primary-lg':'0 16px 40px -8px rgb(31 68 245 / 0.35)',
+          },
+          transitionTimingFunction: { 'out-expo': 'cubic-bezier(0.16, 1, 0.3, 1)' },
         },
       },
     }
   </script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap" rel="stylesheet" />
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.14.8/dist/cdn.min.js"></script>
   <style>
-    .carousel-item { display: none; }
-    .carousel-item.active { display: block; }
-    /* mega-menu handled via Tailwind group-hover */
-    .cart-sidebar { transform: translateX(100%); transition: transform .3s ease; }
+    [x-cloak] { display: none !important; }
+    body { font-feature-settings: "ss01", "cv11"; }
+    .cart-sidebar { transform: translateX(100%); transition: transform .35s cubic-bezier(0.16, 1, 0.3, 1); }
     .cart-sidebar.open { transform: translateX(0); }
+    .scrollbar-none::-webkit-scrollbar { display: none; }
+    .scrollbar-none { scrollbar-width: none; }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+    }
   </style>
 </head>
-<body class="bg-white font-sans text-gray-800 antialiased">
+<body class="bg-white font-sans text-ink-800 antialiased"
+      x-data="{ cartOpen: false }"
+      @keydown.escape.window="cartOpen = false">
 
-<!-- TOP BAR -->
-<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
-  <span>Frete grátis para compras acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros</span>
+{# TOP BAR #}
+<div class="bg-ink-900 text-ink-100 text-xs py-2 hidden sm:block">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between">
+    <div class="flex items-center gap-6">
+      <span class="flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
+        Frete grátis acima de R$&nbsp;299
+      </span>
+      <span class="hidden md:flex items-center gap-1.5">
+        <svg class="w-3.5 h-3.5 text-primary-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
+        12x sem juros
+      </span>
+    </div>
+    <div class="hidden md:flex items-center gap-5 text-ink-300">
+      <a href="/loja-fisica" class="hover:text-white transition-colors">Loja física</a>
+      <a href="/contato" class="hover:text-white transition-colors">Atendimento</a>
+      <a href="/rastreio" class="hover:text-white transition-colors">Rastrear pedido</a>
+    </div>
+  </div>
 </div>
 
-<!-- HEADER -->
-<header class="bg-white shadow-sm sticky top-0 z-40">
+{# HEADER #}
+<header class="bg-white border-b border-ink-100 sticky top-0 z-40 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-16 gap-4">
+    <div class="flex items-center justify-between h-18 gap-4 py-3">
 
-      <!-- Logo -->
-      <a href="/" class="flex-shrink-0">
-        <span class="text-2xl font-extrabold text-primary-700 tracking-tight">
-          Music<span class="text-gray-800">Mais</span>
+      {# Logo #}
+      <a href="/" class="flex-shrink-0 flex items-center gap-2">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-primary">
+          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 17.5V8a3 3 0 016 0v6.5M9 17.5a2 2 0 11-2-2M9 17.5V19a2 2 0 11-2-2m8-1.5V8a2 2 0 11-2 2"/></svg>
+        </div>
+        <span class="font-display text-xl font-extrabold tracking-tight text-ink-900">
+          Music<span class="text-primary-700">Mais</span>
         </span>
       </a>
 
-      <!-- Busca desktop -->
-      <div class="hidden md:flex flex-1 max-w-xl">
-        <form method="get" action="/busca" class="relative w-full">
-          <input type="search" name="q" placeholder="Buscar instrumentos, marcas..."
-            class="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent" />
-          <button type="submit" class="absolute right-0 top-0 h-full px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-r-full transition-colors">
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-            </svg>
+      {# Busca desktop #}
+      <div class="hidden md:flex flex-1 max-w-2xl">
+        <form method="get" action="/busca" role="search" class="relative w-full">
+          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="search" name="q" placeholder="Buscar instrumentos, marcas, categorias…"
+            aria-label="Buscar produtos"
+            class="w-full pl-11 pr-32 py-3 bg-ink-50 border border-transparent rounded-full text-sm placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 focus:bg-white transition" />
+          <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-5 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-semibold text-sm shadow-primary transition-all">
+            Buscar
           </button>
         </form>
       </div>
 
-      <!-- Ações direita -->
-      <div class="flex items-center gap-3">
+      {# Ações direita #}
+      <div class="flex items-center gap-1">
 
-        <!-- Conta -->
         {% if user.is_authenticated %}
-        <a href="{% url 'authentification:profile' %}" class="hidden sm:flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
-          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
-          <span class="truncate max-w-16">{{ user.first_name|default:user.username }}</span>
+        <a href="{% url 'authentification:profile' %}" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-ink-700 hover:bg-ink-50 hover:text-primary-700 transition-colors">
+          <div class="w-8 h-8 rounded-full bg-primary-100 text-primary-700 flex items-center justify-center font-bold text-xs uppercase">
+            {{ user.first_name|default:user.username|first }}
+          </div>
+          <div class="text-left leading-tight">
+            <p class="text-xs text-ink-500">Olá,</p>
+            <p class="text-xs font-semibold truncate max-w-20">{{ user.first_name|default:user.username }}</p>
+          </div>
         </a>
-        <a href="{% url 'authentification:logout' %}" class="hidden sm:flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
-          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/>
-          </svg>
-          <span>Sair</span>
+        <a href="{% url 'authentification:logout' %}" aria-label="Sair" class="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl text-ink-500 hover:bg-ink-50 hover:text-primary-700 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
         </a>
         {% else %}
-        <a href="{% url 'authentification:login' %}" class="hidden sm:flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
-          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
-          </svg>
-          <span>Entrar</span>
+        <a href="{% url 'authentification:login' %}" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-ink-700 hover:bg-ink-50 hover:text-primary-700 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <div class="text-left leading-tight">
+            <p class="text-xs text-ink-500">Conta</p>
+            <p class="text-xs font-semibold">Entrar</p>
+          </div>
         </a>
         {% endif %}
 
-        <!-- Carrinho -->
-        <button id="cart-btn"
-          class="relative flex flex-col items-center text-gray-600 hover:text-primary-700 transition-colors text-xs">
-          <svg class="w-6 h-6 mb-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-              d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
-          </svg>
-          <span>Carrinho</span>
-          <span id="cart-count" class="absolute -top-1 -right-1 bg-primary-600 text-white text-xs rounded-full w-4 h-4 items-center justify-center leading-none
-            {% if cart_count %}flex{% else %}hidden{% endif %}">
-            {{ cart_count|default:0 }}
-          </span>
+        {# Favoritos #}
+        <a href="/favoritos" aria-label="Favoritos" class="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl text-ink-500 hover:bg-ink-50 hover:text-primary-700 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </a>
+
+        {# Carrinho #}
+        <button aria-label="Abrir carrinho" @click="cartOpen = true"
+          class="relative flex items-center gap-2 px-3 py-2 rounded-xl text-ink-700 hover:bg-primary-50 hover:text-primary-700 transition-colors group">
+          <div class="relative">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+            <span id="cart-count" class="absolute -top-2 -right-2 bg-accent-500 text-white text-xs font-bold rounded-full min-w-4 h-4 px-1 items-center justify-center leading-none ring-2 ring-white
+              {% if cart_count %}flex{% else %}hidden{% endif %}">
+              {{ cart_count|default:0 }}
+            </span>
+          </div>
+          <div class="hidden sm:block text-left leading-tight">
+            <p class="text-xs text-ink-500 group-hover:text-primary-600">Meu</p>
+            <p class="text-xs font-semibold">Carrinho</p>
+          </div>
         </button>
 
-        <!-- Hamburguer mobile -->
-        <button id="mobile-menu-btn" class="md:hidden p-2 text-gray-600">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/>
-          </svg>
+        {# Hamburguer mobile #}
+        <button id="mobile-menu-btn" aria-label="Abrir menu" class="md:hidden w-10 h-10 flex items-center justify-center rounded-xl text-ink-700 hover:bg-ink-50">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
     </div>
 
-    <!-- Busca mobile -->
+    {# Busca mobile #}
     <div class="md:hidden pb-3">
-      <form method="get" action="/busca" class="relative w-full">
-        <input type="search" name="q" placeholder="Buscar instrumentos..."
-          class="w-full pl-4 pr-12 py-2 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
-        <button type="submit" class="absolute right-0 top-0 h-full px-3 bg-primary-600 text-white rounded-r-full">
-          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
-          </svg>
-        </button>
+      <form method="get" action="/busca" role="search" class="relative w-full">
+        <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <input type="search" name="q" placeholder="Buscar instrumentos…" aria-label="Buscar"
+          class="w-full pl-10 pr-4 py-2.5 bg-ink-50 border border-transparent rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:bg-white" />
       </form>
     </div>
   </div>
 
-  <!-- MEGA-MENU DE CATEGORIAS -->
-  <nav class="hidden md:block bg-primary-700 text-white">
+  {# MEGA-MENU #}
+  <nav aria-label="Categorias" class="hidden md:block bg-white border-t border-ink-100">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <ul class="flex items-center h-10 gap-0 text-sm font-medium">
+      <ul class="flex items-center h-12 gap-1 text-sm font-semibold">
 
-        <li class="menu-item group relative">
-          <a href="/categoria/audio" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+        <li class="group relative">
+          <a href="/categoria/audio" class="flex items-center gap-1 px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
             Áudio Profissional
-            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <svg class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </a>
-          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-64 grid grid-cols-2 gap-x-8 gap-y-1">
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Mixers e Mesas de Som</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Interfaces de Áudio</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Microfones</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Monitores de Estúdio</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Amplificadores</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Cabos e Acessórios</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Fones de Ouvido</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Pedais de Efeito</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">PA e Sonorização</a>
+          <div class="hidden group-hover:grid absolute top-full left-0 z-50 bg-white text-ink-700 shadow-lg rounded-2xl p-6 min-w-96 border border-ink-100 grid-cols-2 gap-x-8 gap-y-1">
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Mixers e Mesas de Som</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Interfaces de Áudio</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Microfones</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Monitores de Estúdio</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Amplificadores</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Cabos e Acessórios</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Fones de Ouvido</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Pedais de Efeito</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">PA e Sonorização</a>
           </div>
         </li>
 
-        <li class="menu-item group relative">
-          <a href="/categoria/cordas" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+        <li class="group relative">
+          <a href="/categoria/cordas" class="flex items-center gap-1 px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
             Cordas
-            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <svg class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </a>
-          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-64 grid grid-cols-2 gap-x-8 gap-y-1">
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Guitarras</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Violões</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Baixos</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Ukuleles</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Banjos</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Violinos</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Cordas Avulsas</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Capas e Bags</a>
+          <div class="hidden group-hover:grid absolute top-full left-0 z-50 bg-white text-ink-700 shadow-lg rounded-2xl p-6 min-w-96 border border-ink-100 grid-cols-2 gap-x-8 gap-y-1">
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Guitarras</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Violões</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Baixos</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Ukuleles</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Banjos</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Violinos</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Cordas Avulsas</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Capas e Bags</a>
           </div>
         </li>
 
-        <li class="menu-item group relative">
-          <a href="/categoria/bateria" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+        <li class="group relative">
+          <a href="/categoria/bateria" class="flex items-center gap-1 px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
             Bateria e Percussão
-            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <svg class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </a>
-          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-48 grid grid-cols-1 gap-y-1">
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Baterias Acústicas</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Baterias Eletrônicas</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Pratos e Chimbal</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Peles e Acessórios</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Percussão Étnica</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Cajón</a>
+          <div class="hidden group-hover:flex absolute top-full left-0 z-50 bg-white text-ink-700 shadow-lg rounded-2xl p-6 min-w-64 border border-ink-100 flex-col gap-y-1">
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Baterias Acústicas</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Baterias Eletrônicas</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Pratos e Chimbal</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Peles e Acessórios</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Percussão Étnica</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Cajón</a>
           </div>
         </li>
 
-        <li class="menu-item group relative">
-          <a href="/categoria/teclados" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+        <li class="group relative">
+          <a href="/categoria/teclados" class="flex items-center gap-1 px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
             Pianos e Teclados
-            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <svg class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </a>
-          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-48 grid grid-cols-1 gap-y-1">
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Pianos Digitais</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Teclados Arranjadores</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Sintetizadores</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">MIDI Controllers</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Órgãos</a>
+          <div class="hidden group-hover:flex absolute top-full left-0 z-50 bg-white text-ink-700 shadow-lg rounded-2xl p-6 min-w-64 border border-ink-100 flex-col gap-y-1">
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Pianos Digitais</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Teclados Arranjadores</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Sintetizadores</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">MIDI Controllers</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Órgãos</a>
           </div>
         </li>
 
-        <li class="menu-item group relative">
-          <a href="/categoria/sopro" class="flex items-center gap-1 px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+        <li class="group relative">
+          <a href="/categoria/sopro" class="flex items-center gap-1 px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
             Sopro
-            <svg class="w-3.5 h-3.5 opacity-70" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
-            </svg>
+            <svg class="w-3.5 h-3.5 opacity-50 group-hover:opacity-100 transition-transform group-hover:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/></svg>
           </a>
-          <div class="mega-menu hidden group-hover:block absolute top-full left-0 z-50 bg-white text-gray-800 shadow-xl rounded-b-lg p-6 min-w-48 grid grid-cols-1 gap-y-1">
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Flautas</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Saxofones</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Trompetes</a>
-            <a href="#" class="py-1 text-sm hover:text-primary-700 transition-colors">Clarinetas</a>
+          <div class="hidden group-hover:flex absolute top-full left-0 z-50 bg-white text-ink-700 shadow-lg rounded-2xl p-6 min-w-56 border border-ink-100 flex-col gap-y-1">
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Flautas</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Saxofones</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Trompetes</a>
+            <a href="#" class="py-1.5 text-sm hover:text-primary-700 transition-colors">Clarinetas</a>
           </div>
         </li>
 
         <li>
-          <a href="/categoria/iluminacao" class="flex items-center px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap">
+          <a href="/categoria/iluminacao" class="flex items-center px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
             Iluminação
           </a>
         </li>
 
-        <li>
-          <a href="/promocoes" class="flex items-center px-4 h-10 hover:bg-primary-600 transition-colors whitespace-nowrap font-bold text-yellow-300">
-            🔥 Promoções
+        <li class="ml-auto">
+          <a href="/promocoes" class="flex items-center gap-1.5 px-4 h-9 my-1.5 bg-accent-500 hover:bg-accent-600 text-white rounded-full font-bold text-sm transition-colors shadow-sm whitespace-nowrap">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
+            Promoções
           </a>
         </li>
       </ul>
@@ -237,373 +282,433 @@
   </nav>
 </header>
 
-<!-- MENSAGENS FLASH -->
+{# MENSAGENS FLASH #}
 {% if messages %}
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4 space-y-2">
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-6 space-y-2">
   {% for message in messages %}
-  <div class="rounded-lg px-4 py-3 text-sm flex items-center justify-between
-    {% if message.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
-    {% elif message.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
-    {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+  <div role="status" class="rounded-lg px-4 py-3 text-sm flex items-center gap-3
+    {% if message.tags == 'error' %}bg-danger-50 text-danger-700 ring-1 ring-danger-500/20
+    {% elif message.tags == 'success' %}bg-success-50 text-success-700 ring-1 ring-success-500/20
+    {% else %}bg-info-50 text-info-700 ring-1 ring-info-500/20{% endif %}">
+    <svg class="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"/></svg>
     <span>{{ message }}</span>
   </div>
   {% endfor %}
 </div>
 {% endif %}
 
-<!-- HERO CAROUSEL -->
-<section class="relative overflow-hidden bg-gray-100">
-  <div id="carousel" class="relative">
+{# HERO CAROUSEL #}
+<section class="relative overflow-hidden bg-ink-50">
+  <div class="relative"
+       x-data="{
+         current: 0,
+         total: 3,
+         move(dir) { this.current = (this.current + dir + this.total) % this.total },
+         go(n) { this.current = n }
+       }"
+       x-init="if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => move(1), 6000)">
 
-    <div class="carousel-item active">
-      <div class="relative h-64 sm:h-80 md:h-96 lg:h-[480px] bg-gradient-to-r from-primary-900 via-primary-800 to-primary-600 flex items-center">
-        <div class="max-w-7xl mx-auto px-8 w-full">
-          <div class="max-w-lg">
-            <p class="text-primary-200 text-sm font-semibold uppercase tracking-wider mb-2">Lançamento</p>
-            <h2 class="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Guitarras<br/>até 30% OFF</h2>
-            <p class="text-primary-100 text-base mb-6">Os melhores instrumentos com o melhor preço.</p>
-            <a href="/categoria/cordas" class="inline-block bg-white text-primary-700 font-bold py-3 px-8 rounded-full hover:bg-primary-50 transition-colors shadow-lg">Ver ofertas</a>
+    <div x-show="current === 0" x-cloak>
+      <div class="relative h-72 sm:h-96 md:h-96 lg:h-96 bg-gradient-to-br from-primary-700 via-primary-800 to-ink-900 flex items-center overflow-hidden">
+        <div class="absolute inset-0 opacity-30">
+          <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-400 blur-3xl"></div>
+          <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary-500 blur-3xl"></div>
+        </div>
+        <div class="relative max-w-7xl mx-auto px-6 sm:px-10 w-full">
+          <div class="max-w-xl">
+            <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">
+              <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse"></span>
+              Lançamento
+            </span>
+            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">
+              Guitarras<br/>até <span class="text-accent-400">30% OFF</span>
+            </h2>
+            <p class="text-primary-100 text-base sm:text-lg mb-8 max-w-md">Os melhores instrumentos das marcas que você ama, com o melhor preço do mercado.</p>
+            <div class="flex flex-wrap gap-3">
+              <a href="/categoria/cordas" class="inline-flex items-center gap-2 bg-white text-primary-700 font-bold py-3.5 px-7 rounded-full hover:bg-primary-50 transition-all shadow-primary-lg hover:-translate-y-0.5">
+                Ver ofertas
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+              </a>
+              <a href="/categoria/cordas/guitarras" class="inline-flex items-center bg-white/10 backdrop-blur ring-1 ring-white/20 text-white font-semibold py-3.5 px-6 rounded-full hover:bg-white/20 transition-all">Explorar guitarras</a>
+            </div>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="carousel-item">
-      <div class="relative h-64 sm:h-80 md:h-96 lg:h-[480px] bg-gradient-to-r from-slate-900 via-slate-800 to-primary-700 flex items-center">
-        <div class="max-w-7xl mx-auto px-8 w-full">
-          <div class="max-w-lg">
-            <p class="text-blue-200 text-sm font-semibold uppercase tracking-wider mb-2">Destaque</p>
-            <h2 class="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Baterias<br/>Acústicas</h2>
-            <p class="text-blue-100 text-base mb-6">Kits completos para iniciantes e profissionais.</p>
-            <a href="/categoria/bateria" class="inline-block bg-primary-500 text-white font-bold py-3 px-8 rounded-full hover:bg-primary-400 transition-colors shadow-lg">Explorar</a>
+    <div x-show="current === 1" x-cloak>
+      <div class="relative h-72 sm:h-96 md:h-96 lg:h-96 bg-gradient-to-br from-ink-900 via-primary-950 to-primary-700 flex items-center overflow-hidden">
+        <div class="absolute inset-0 opacity-25">
+          <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary-500 blur-3xl"></div>
+        </div>
+        <div class="relative max-w-7xl mx-auto px-6 sm:px-10 w-full">
+          <div class="max-w-xl">
+            <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">Em destaque</span>
+            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">Baterias<br/>Acústicas</h2>
+            <p class="text-primary-100 text-base sm:text-lg mb-8 max-w-md">Kits completos para iniciantes e profissionais — direto da marca para a sua casa.</p>
+            <a href="/categoria/bateria" class="inline-flex items-center gap-2 bg-primary-500 text-white font-bold py-3.5 px-7 rounded-full hover:bg-primary-400 transition-all shadow-primary-lg hover:-translate-y-0.5">
+              Explorar
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <div class="carousel-item">
-      <div class="relative h-64 sm:h-80 md:h-96 lg:h-[480px] bg-gradient-to-r from-primary-800 to-cyan-600 flex items-center">
-        <div class="max-w-7xl mx-auto px-8 w-full">
-          <div class="max-w-lg">
-            <p class="text-cyan-200 text-sm font-semibold uppercase tracking-wider mb-2">Novidade</p>
-            <h2 class="text-white text-3xl sm:text-4xl lg:text-5xl font-extrabold leading-tight mb-4">Pianos Digitais<br/>Roland &amp; Yamaha</h2>
-            <p class="text-cyan-100 text-base mb-6">Toque como um profissional em casa.</p>
-            <a href="/categoria/teclados" class="inline-block bg-white text-primary-700 font-bold py-3 px-8 rounded-full hover:bg-gray-100 transition-colors shadow-lg">Ver linha completa</a>
+    <div x-show="current === 2" x-cloak>
+      <div class="relative h-72 sm:h-96 md:h-96 lg:h-96 bg-gradient-to-br from-primary-800 via-primary-700 to-primary-500 flex items-center overflow-hidden">
+        <div class="absolute inset-0 opacity-30">
+          <div class="absolute -top-20 right-1/4 w-96 h-96 rounded-full bg-white blur-3xl"></div>
+        </div>
+        <div class="relative max-w-7xl mx-auto px-6 sm:px-10 w-full">
+          <div class="max-w-xl">
+            <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">Novidade</span>
+            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">Pianos Digitais<br/>Roland &amp; Yamaha</h2>
+            <p class="text-primary-100 text-base sm:text-lg mb-8 max-w-md">Toque como um profissional em casa, com som de estúdio.</p>
+            <a href="/categoria/teclados" class="inline-flex items-center gap-2 bg-white text-primary-700 font-bold py-3.5 px-7 rounded-full hover:bg-primary-50 transition-all shadow-primary-lg hover:-translate-y-0.5">
+              Ver linha completa
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </a>
           </div>
         </div>
       </div>
     </div>
 
-    <button onclick="moveCarousel(-1)"
-      class="absolute left-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow transition-colors z-10">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
-      </svg>
+    <button @click="move(-1)" aria-label="Slide anterior"
+      class="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/90 hover:bg-white text-ink-800 rounded-full shadow-lg backdrop-blur transition-all hover:scale-105 z-10 flex items-center justify-center">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
     </button>
-    <button onclick="moveCarousel(1)"
-      class="absolute right-3 top-1/2 -translate-y-1/2 bg-white/80 hover:bg-white text-gray-800 rounded-full p-2 shadow transition-colors z-10">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
-      </svg>
+    <button @click="move(1)" aria-label="Próximo slide"
+      class="absolute right-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/90 hover:bg-white text-ink-800 rounded-full shadow-lg backdrop-blur transition-all hover:scale-105 z-10 flex items-center justify-center">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M9 5l7 7-7 7"/></svg>
     </button>
 
-    <div class="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-      <button onclick="goToSlide(0)" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/60 transition-all"></button>
-      <button onclick="goToSlide(1)" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/60 transition-all"></button>
-      <button onclick="goToSlide(2)" class="carousel-dot w-2.5 h-2.5 rounded-full bg-white/60 transition-all"></button>
+    <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+      <button @click="go(0)" aria-label="Slide 1" :class="current === 0 ? 'bg-white w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all"></button>
+      <button @click="go(1)" aria-label="Slide 2" :class="current === 1 ? 'bg-white w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all"></button>
+      <button @click="go(2)" aria-label="Slide 3" :class="current === 2 ? 'bg-white w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all"></button>
     </div>
   </div>
 </section>
 
-<!-- BANNERS DE CATEGORIAS -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+{# CATEGORIAS DESTAQUE #}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
   <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <a href="/categoria/audio" class="group relative overflow-hidden rounded-xl h-36 bg-primary-900 flex items-end p-4 shadow-md hover:shadow-xl transition-shadow">
-      <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+    <a href="/categoria/audio" class="group relative overflow-hidden rounded-2xl h-44 bg-gradient-to-br from-primary-900 to-primary-700 p-6 flex items-end shadow hover:shadow-lg transition-all hover:-translate-y-0.5">
+      <div class="absolute inset-0 opacity-30">
+        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary-400 blur-2xl"></div>
+      </div>
+      <svg class="absolute top-5 right-5 w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
       <div class="relative z-10">
-        <p class="text-white font-bold text-lg leading-tight">Áudio<br/>Profissional</p>
-        <p class="text-primary-300 text-xs mt-0.5 group-hover:text-white transition-colors">Ver tudo →</p>
+        <p class="text-white font-display font-extrabold text-2xl leading-tight">Áudio<br/>Profissional</p>
+        <p class="text-primary-200 text-sm mt-1 group-hover:text-white transition-colors flex items-center gap-1">Ver tudo <span class="transition-transform group-hover:translate-x-1">→</span></p>
       </div>
     </a>
-    <a href="/categoria/cordas" class="group relative overflow-hidden rounded-xl h-36 bg-slate-800 flex items-end p-4 shadow-md hover:shadow-xl transition-shadow">
-      <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+    <a href="/categoria/cordas" class="group relative overflow-hidden rounded-2xl h-44 bg-gradient-to-br from-ink-800 to-ink-900 p-6 flex items-end shadow hover:shadow-lg transition-all hover:-translate-y-0.5">
+      <div class="absolute inset-0 opacity-25">
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary-500 blur-2xl"></div>
+      </div>
+      <svg class="absolute top-5 right-5 w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
       <div class="relative z-10">
-        <p class="text-white font-bold text-lg leading-tight">Guitarras<br/>e Violões</p>
-        <p class="text-primary-300 text-xs mt-0.5 group-hover:text-white transition-colors">Ver tudo →</p>
+        <p class="text-white font-display font-extrabold text-2xl leading-tight">Guitarras<br/>e Violões</p>
+        <p class="text-primary-300 text-sm mt-1 group-hover:text-white transition-colors flex items-center gap-1">Ver tudo <span class="transition-transform group-hover:translate-x-1">→</span></p>
       </div>
     </a>
-    <a href="/categoria/bateria" class="group relative overflow-hidden rounded-xl h-36 bg-primary-800 flex items-end p-4 shadow-md hover:shadow-xl transition-shadow">
-      <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent"></div>
+    <a href="/categoria/bateria" class="group relative overflow-hidden rounded-2xl h-44 bg-gradient-to-br from-primary-700 to-primary-500 p-6 flex items-end shadow hover:shadow-lg transition-all hover:-translate-y-0.5">
+      <div class="absolute inset-0 opacity-30">
+        <div class="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
+      </div>
+      <svg class="absolute top-5 right-5 w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke-width="1.5"/></svg>
       <div class="relative z-10">
-        <p class="text-white font-bold text-lg leading-tight">Bateria<br/>e Percussão</p>
-        <p class="text-primary-300 text-xs mt-0.5 group-hover:text-white transition-colors">Ver tudo →</p>
+        <p class="text-white font-display font-extrabold text-2xl leading-tight">Bateria<br/>e Percussão</p>
+        <p class="text-primary-100 text-sm mt-1 group-hover:text-white transition-colors flex items-center gap-1">Ver tudo <span class="transition-transform group-hover:translate-x-1">→</span></p>
       </div>
     </a>
   </div>
 </section>
 
-<!-- PRODUTOS MAIS VISUALIZADOS -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-  <div class="flex items-center justify-between mb-6">
-    <h2 class="text-2xl font-bold text-gray-800">Produtos mais visualizados</h2>
-    <a href="/produtos" class="text-primary-600 hover:text-primary-800 text-sm font-medium transition-colors">Ver todos →</a>
+{# PRODUTOS MAIS VISUALIZADOS #}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="flex items-end justify-between mb-8">
+    <div>
+      <p class="text-xs font-semibold tracking-widest uppercase text-primary-600 mb-2">Em alta</p>
+      <h2 class="font-display text-3xl sm:text-display font-bold text-ink-900">Produtos mais visualizados</h2>
+    </div>
+    <a href="/produtos" class="hidden sm:inline-flex items-center gap-1 text-primary-700 hover:text-primary-800 text-sm font-semibold transition-colors group">
+      Ver todos <span class="transition-transform group-hover:translate-x-1">→</span>
+    </a>
   </div>
 
   {% if featured_products %}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
     {% for product in featured_products %}
-    <div class="group bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md transition-shadow overflow-hidden flex flex-col">
-      <div class="relative aspect-square bg-gray-50 overflow-hidden">
+    <article class="group bg-white rounded-2xl border border-ink-200 hover:border-primary-200 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 ease-out-expo overflow-hidden flex flex-col">
+      <div class="relative aspect-square bg-ink-50 overflow-hidden">
         {% if product.main_image %}
         <img src="{{ product.main_image.url }}" alt="{{ product.name }}"
-          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" />
+          loading="{% if forloop.counter <= 2 %}eager{% else %}lazy{% endif %}"
+          decoding="async"
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500 ease-out-expo" />
         {% else %}
-        <div class="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-          <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-              d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
-          </svg>
+        <div class="w-full h-full flex items-center justify-center text-ink-300">
+          <svg class="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
         </div>
         {% endif %}
         {% if product.discount_percent %}
-        <span class="absolute top-2 left-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
+        <span class="absolute top-2 left-2 bg-primary-600 text-white text-xs font-bold px-2 py-0.5 rounded-full shadow-sm">
           -{{ product.discount_percent }}%
         </span>
         {% endif %}
+        <button aria-label="Adicionar a favoritos" class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur rounded-full flex items-center justify-center text-ink-600 hover:text-primary-700 shadow-sm transition-colors opacity-0 group-hover:opacity-100">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+        </button>
       </div>
-      <div class="p-3 flex flex-col flex-1">
-        <p class="text-xs text-gray-400 mb-0.5">{{ product.brand.name }}</p>
-        <h3 class="text-sm font-semibold text-gray-800 leading-tight line-clamp-2 flex-1 mb-2">
-          <a href="{{ product.get_absolute_url }}">{{ product.name }}</a>
+      <div class="p-4 flex flex-col flex-1">
+        <p class="text-xs uppercase tracking-wider text-ink-400 font-semibold mb-1">{{ product.brand.name }}</p>
+        <h3 class="text-sm font-semibold text-ink-800 leading-snug line-clamp-2 flex-1 mb-3">
+          <a href="{{ product.get_absolute_url }}" class="hover:text-primary-700 transition-colors">{{ product.name }}</a>
         </h3>
         <div class="mb-3">
           {% if product.original_price and product.original_price != product.price %}
-          <p class="text-xs text-gray-400 line-through">R$ {{ product.original_price|floatformat:2 }}</p>
+          <p class="text-xs text-ink-400 line-through">R$ {{ product.original_price|floatformat:2 }}</p>
           {% endif %}
           <p class="text-base font-bold text-primary-700">R$ {{ product.price|floatformat:2 }}</p>
-          <p class="text-xs text-gray-500">ou 12x de R$ {{ product.price_installment|floatformat:2 }}</p>
+          <p class="text-xs text-ink-500">12x de R$ {{ product.price_installment|floatformat:2 }}</p>
         </div>
-        <button class="w-full bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-bold py-2 px-3 rounded-lg transition-colors">
-          Adicionar ao carrinho
+        <button class="w-full bg-primary-600 hover:bg-primary-700 active:bg-primary-800 text-white text-xs font-bold py-2.5 rounded-lg transition-colors">
+          Adicionar
         </button>
       </div>
-    </div>
+    </article>
     {% endfor %}
   </div>
 
   {% else %}
-  <!-- Placeholder enquanto não há produtos cadastrados -->
+  {# Skeleton #}
   <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4">
     {% for i in "123456" %}
-    <div class="bg-white rounded-xl border border-gray-100 shadow-sm overflow-hidden flex flex-col">
-      <div class="aspect-square bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-        <svg class="w-16 h-16 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1"
-            d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/>
-        </svg>
+    <div class="bg-white rounded-2xl border border-ink-200 overflow-hidden flex flex-col animate-pulse">
+      <div class="aspect-square bg-ink-100 flex items-center justify-center">
+        <svg class="w-16 h-16 text-ink-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
       </div>
-      <div class="p-3">
-        <div class="h-3 bg-gray-200 rounded mb-2 w-2/3"></div>
-        <div class="h-4 bg-gray-200 rounded mb-1"></div>
-        <div class="h-4 bg-gray-200 rounded w-3/4 mb-3"></div>
-        <div class="h-8 bg-gray-200 rounded-lg"></div>
+      <div class="p-4">
+        <div class="h-2.5 bg-ink-100 rounded mb-2 w-1/2"></div>
+        <div class="h-3 bg-ink-100 rounded mb-1.5"></div>
+        <div class="h-3 bg-ink-100 rounded w-3/4 mb-3"></div>
+        <div class="h-4 bg-ink-100 rounded w-1/3 mb-1"></div>
+        <div class="h-2.5 bg-ink-100 rounded w-2/3 mb-3"></div>
+        <div class="h-9 bg-ink-100 rounded-lg"></div>
       </div>
     </div>
     {% endfor %}
   </div>
   {% endif %}
+
+  <a href="/produtos" class="sm:hidden mt-6 inline-flex items-center justify-center w-full text-primary-700 hover:text-primary-800 text-sm font-semibold transition-colors py-3 rounded-full ring-1 ring-ink-200 hover:ring-primary-300">Ver todos →</a>
 </section>
 
-<!-- BANNER PROMOCIONAL DUPLO -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+{# BANNER PROMOCIONAL DUPLO #}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-primary-800 to-primary-600 p-8 flex items-center shadow-md">
-      <div>
-        <p class="text-primary-200 text-sm font-semibold uppercase tracking-wider mb-1">Especial</p>
-        <h3 class="text-white text-2xl font-extrabold mb-2">Equipamentos<br/>de Áudio</h3>
-        <p class="text-primary-100 text-sm mb-4">Interfaces, mixers e monitores<br/>para seu home studio.</p>
-        <a href="/categoria/audio" class="inline-block bg-white text-primary-700 font-bold py-2 px-6 rounded-full text-sm hover:bg-primary-50 transition-colors">Ver linha</a>
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-primary-700 to-primary-500 p-8 sm:p-10 flex items-center shadow">
+      <div class="absolute inset-0 opacity-25">
+        <div class="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white blur-3xl"></div>
+      </div>
+      <div class="relative">
+        <span class="inline-block bg-white/15 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3">Especial</span>
+        <h3 class="font-display text-white text-2xl sm:text-3xl font-extrabold mb-2 leading-tight">Equipamentos<br/>de Áudio</h3>
+        <p class="text-primary-100 text-sm mb-5 max-w-xs">Interfaces, mixers e monitores para o seu home studio.</p>
+        <a href="/categoria/audio" class="inline-flex items-center gap-1.5 bg-white text-primary-700 font-bold py-2.5 px-5 rounded-full text-sm hover:bg-primary-50 transition-colors shadow-sm">
+          Ver linha
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
       </div>
     </div>
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-slate-800 to-slate-600 p-8 flex items-center shadow-md">
-      <div>
-        <p class="text-slate-300 text-sm font-semibold uppercase tracking-wider mb-1">Destaque</p>
-        <h3 class="text-white text-2xl font-extrabold mb-2">Percussão<br/>Completa</h3>
-        <p class="text-slate-200 text-sm mb-4">Baterias, cajón e percussão étnica<br/>para todos os estilos.</p>
-        <a href="/categoria/bateria" class="inline-block bg-primary-500 text-white font-bold py-2 px-6 rounded-full text-sm hover:bg-primary-400 transition-colors">Explorar</a>
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-ink-800 to-ink-900 p-8 sm:p-10 flex items-center shadow">
+      <div class="absolute inset-0 opacity-25">
+        <div class="absolute -bottom-10 -left-10 w-48 h-48 rounded-full bg-primary-500 blur-3xl"></div>
+      </div>
+      <div class="relative">
+        <span class="inline-block bg-white/10 backdrop-blur ring-1 ring-white/20 text-ink-300 text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3">Destaque</span>
+        <h3 class="font-display text-white text-2xl sm:text-3xl font-extrabold mb-2 leading-tight">Percussão<br/>Completa</h3>
+        <p class="text-ink-300 text-sm mb-5 max-w-xs">Baterias, cajón e percussão étnica para todos os estilos.</p>
+        <a href="/categoria/bateria" class="inline-flex items-center gap-1.5 bg-primary-500 hover:bg-primary-400 text-white font-bold py-2.5 px-5 rounded-full text-sm transition-colors shadow-primary">
+          Explorar
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+        </a>
       </div>
     </div>
   </div>
 </section>
 
-<!-- BANNER CTA -->
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-  <div class="rounded-2xl bg-primary-700 px-8 py-10 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-md">
-    <div>
-      <h3 class="text-white text-2xl font-extrabold mb-1">Projetos de Sonorização</h3>
-      <p class="text-primary-200 text-sm">Planejamos o sistema de áudio ideal para seu espaço.</p>
+{# BANNER CTA #}
+<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="relative overflow-hidden rounded-3xl bg-gradient-to-br from-primary-800 via-primary-700 to-primary-600 px-8 sm:px-12 py-12 sm:py-14 flex flex-col sm:flex-row items-center justify-between gap-6 shadow-primary-lg">
+    <div class="absolute inset-0 opacity-25">
+      <div class="absolute -top-20 left-1/3 w-72 h-72 rounded-full bg-white blur-3xl"></div>
+      <div class="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-primary-400 blur-3xl"></div>
+    </div>
+    <div class="relative">
+      <span class="inline-block bg-white/15 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold uppercase tracking-widest px-2.5 py-1 rounded-full mb-3">Serviço técnico</span>
+      <h3 class="font-display text-white text-3xl sm:text-display font-extrabold mb-2 leading-tight">Projetos de Sonorização</h3>
+      <p class="text-primary-100 text-base max-w-md">Planejamos o sistema de áudio ideal para o seu espaço — do home studio ao palco.</p>
     </div>
     <a href="/contato"
-      class="flex-shrink-0 bg-white text-primary-700 font-bold py-3 px-8 rounded-full hover:bg-primary-50 transition-colors shadow-md text-sm whitespace-nowrap">
+      class="relative flex-shrink-0 inline-flex items-center gap-2 bg-white text-primary-700 font-bold py-3.5 px-7 rounded-full hover:bg-primary-50 transition-all shadow-lg hover:-translate-y-0.5 text-sm whitespace-nowrap">
       Agende uma visita
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
     </a>
   </div>
 </section>
 
-<!-- DIFERENCIAIS -->
-<section class="bg-gray-50 py-10 mt-4">
+{# DIFERENCIAIS #}
+<section class="bg-ink-50 py-14 mt-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
-      <div class="flex flex-col items-center gap-2">
-        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-          </svg>
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/></svg>
         </div>
-        <p class="font-bold text-gray-800 text-sm">Frete Grátis</p>
-        <p class="text-gray-500 text-xs">Acima de R$&nbsp;299</p>
+        <div>
+          <p class="font-bold text-ink-900 text-sm mb-0.5">Frete Grátis</p>
+          <p class="text-ink-500 text-xs leading-relaxed">Acima de R$ 299 para todo o Brasil</p>
+        </div>
       </div>
-      <div class="flex flex-col items-center gap-2">
-        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-          </svg>
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
         </div>
-        <p class="font-bold text-gray-800 text-sm">Produto Original</p>
-        <p class="text-gray-500 text-xs">Garantia do fabricante</p>
+        <div>
+          <p class="font-bold text-ink-900 text-sm mb-0.5">Produto Original</p>
+          <p class="text-ink-500 text-xs leading-relaxed">Garantia oficial do fabricante</p>
+        </div>
       </div>
-      <div class="flex flex-col items-center gap-2">
-        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
-          </svg>
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/></svg>
         </div>
-        <p class="font-bold text-gray-800 text-sm">12x sem juros</p>
-        <p class="text-gray-500 text-xs">Nos principais cartões</p>
+        <div>
+          <p class="font-bold text-ink-900 text-sm mb-0.5">12x sem juros</p>
+          <p class="text-ink-500 text-xs leading-relaxed">Nos principais cartões</p>
+        </div>
       </div>
-      <div class="flex flex-col items-center gap-2">
-        <div class="w-12 h-12 bg-primary-100 rounded-full flex items-center justify-center">
-          <svg class="w-6 h-6 text-primary-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/>
-          </svg>
+      <div class="flex items-start gap-4">
+        <div class="w-12 h-12 bg-primary-100 text-primary-700 rounded-2xl flex items-center justify-center flex-shrink-0">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"/></svg>
         </div>
-        <p class="font-bold text-gray-800 text-sm">Suporte especializado</p>
-        <p class="text-gray-500 text-xs">Atendimento por músicos</p>
+        <div>
+          <p class="font-bold text-ink-900 text-sm mb-0.5">Suporte especializado</p>
+          <p class="text-ink-500 text-xs leading-relaxed">Atendimento por músicos</p>
+        </div>
       </div>
     </div>
   </div>
 </section>
 
-<!-- FOOTER -->
-<footer class="bg-gray-900 text-gray-300 pt-12 pb-6 mt-8">
+{# FOOTER #}
+<footer class="bg-ink-950 text-ink-300 pt-16 pb-8">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-8 mb-10">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
       <div class="col-span-2 md:col-span-1">
-        <span class="text-2xl font-extrabold text-white tracking-tight">
-          Music<span class="text-primary-400">Mais</span>
-        </span>
-        <p class="text-sm mt-3 leading-relaxed text-gray-400">
-          {{ SITE_TAGLINE }}.
-        </p>
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
+            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 17.5V8a3 3 0 016 0v6.5M9 17.5a2 2 0 11-2-2M9 17.5V19a2 2 0 11-2-2m8-1.5V8a2 2 0 11-2 2"/></svg>
+          </div>
+          <span class="font-display text-xl font-extrabold tracking-tight text-white">
+            Music<span class="text-primary-400">Mais</span>
+          </span>
+        </div>
+        <p class="text-sm leading-relaxed text-ink-400 mb-5">{{ SITE_TAGLINE }}.</p>
+        <div class="flex gap-2">
+          <a href="#" aria-label="Instagram" class="w-9 h-9 rounded-full bg-white/5 hover:bg-primary-600 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+          </a>
+          <a href="#" aria-label="YouTube" class="w-9 h-9 rounded-full bg-white/5 hover:bg-primary-600 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a>
+          <a href="#" aria-label="Facebook" class="w-9 h-9 rounded-full bg-white/5 hover:bg-primary-600 flex items-center justify-center transition-colors">
+            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          </a>
+        </div>
       </div>
       <div>
-        <h4 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Institucional</h4>
-        <ul class="space-y-2 text-sm">
+        <h4 class="text-white font-bold text-sm mb-5 uppercase tracking-wider">Institucional</h4>
+        <ul class="space-y-3 text-sm">
           <li><a href="/sobre" class="hover:text-primary-400 transition-colors">Sobre nós</a></li>
           <li><a href="/privacidade" class="hover:text-primary-400 transition-colors">Política de privacidade</a></li>
           <li><a href="/termos" class="hover:text-primary-400 transition-colors">Termos de uso</a></li>
+          <li><a href="/blog" class="hover:text-primary-400 transition-colors">Blog</a></li>
         </ul>
       </div>
       <div>
-        <h4 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Atendimento</h4>
-        <ul class="space-y-2 text-sm">
+        <h4 class="text-white font-bold text-sm mb-5 uppercase tracking-wider">Atendimento</h4>
+        <ul class="space-y-3 text-sm">
           <li><a href="/faq" class="hover:text-primary-400 transition-colors">Dúvidas frequentes</a></li>
           <li><a href="/trocas-devolucoes" class="hover:text-primary-400 transition-colors">Trocas e devoluções</a></li>
-          <li><a href="/contato" class="hover:text-primary-400 transition-colors">Contato</a></li>
+          <li><a href="/rastreio" class="hover:text-primary-400 transition-colors">Rastrear pedido</a></li>
+          <li><a href="/contato" class="hover:text-primary-400 transition-colors">Fale conosco</a></li>
         </ul>
       </div>
       <div>
-        <h4 class="text-white font-bold text-sm mb-4 uppercase tracking-wider">Loja Física</h4>
-        <address class="not-italic text-sm text-gray-400 space-y-1 leading-relaxed">
-          <p>Rua dos Instrumentos, 123</p>
-          <p>São Paulo — SP</p>
-          <p class="mt-2">Seg–Sex: 9h às 18h</p>
-          <p>Sáb: 9h às 14h</p>
+        <h4 class="text-white font-bold text-sm mb-5 uppercase tracking-wider">Loja Física</h4>
+        <address class="not-italic text-sm text-ink-400 space-y-2 leading-relaxed">
+          <p>Rua dos Instrumentos, 123<br/>São Paulo — SP</p>
+          <div class="pt-2">
+            <p><span class="text-ink-500">Seg–Sex:</span> 9h às 18h</p>
+            <p><span class="text-ink-500">Sábado:</span> 9h às 14h</p>
+          </div>
         </address>
       </div>
     </div>
 
-    <div class="border-t border-gray-800 pt-6 pb-4">
-      <p class="text-xs text-gray-500 mb-3">Formas de pagamento</p>
+    <div class="border-t border-white/10 pt-6 pb-4">
+      <p class="text-xs text-ink-500 mb-3 uppercase tracking-wider font-semibold">Formas de pagamento</p>
       <div class="flex flex-wrap gap-2">
-        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Visa</span>
-        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Mastercard</span>
-        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Pix</span>
-        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Boleto</span>
-        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Elo</span>
-        <span class="bg-gray-800 text-gray-300 text-xs px-3 py-1.5 rounded font-medium">Amex</span>
+        <span class="bg-white/5 ring-1 ring-white/10 text-ink-300 text-xs px-3 py-1.5 rounded-md font-medium">Visa</span>
+        <span class="bg-white/5 ring-1 ring-white/10 text-ink-300 text-xs px-3 py-1.5 rounded-md font-medium">Mastercard</span>
+        <span class="bg-white/5 ring-1 ring-white/10 text-ink-300 text-xs px-3 py-1.5 rounded-md font-medium">Pix</span>
+        <span class="bg-white/5 ring-1 ring-white/10 text-ink-300 text-xs px-3 py-1.5 rounded-md font-medium">Boleto</span>
+        <span class="bg-white/5 ring-1 ring-white/10 text-ink-300 text-xs px-3 py-1.5 rounded-md font-medium">Elo</span>
+        <span class="bg-white/5 ring-1 ring-white/10 text-ink-300 text-xs px-3 py-1.5 rounded-md font-medium">Amex</span>
       </div>
     </div>
 
-    <div class="border-t border-gray-800 pt-4 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-gray-600">
-      <p>&copy; 2025 {{ SITE_NAME }}. Todos os direitos reservados.</p>
+    <div class="border-t border-white/10 pt-5 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-ink-500">
+      <p>&copy; 2026 {{ SITE_NAME }}. Todos os direitos reservados.</p>
       <p>CNPJ: 00.000.000/0001-00</p>
     </div>
   </div>
 </footer>
 
-<!-- SIDEBAR CARRINHO -->
-<div id="cart-overlay" class="fixed inset-0 bg-black/40 z-50 hidden"
-  onclick="document.getElementById('cart-sidebar').classList.remove('open'); this.classList.add('hidden')"></div>
+{# SIDEBAR CARRINHO #}
+<div x-show="cartOpen" x-cloak class="fixed inset-0 bg-ink-900/50 backdrop-blur-sm z-50"
+  @click="cartOpen = false"></div>
 
-<aside id="cart-sidebar" class="cart-sidebar fixed top-0 right-0 h-full w-80 bg-white shadow-2xl z-50 flex flex-col">
-  <div class="flex items-center justify-between p-4 border-b">
-    <h2 class="font-bold text-gray-800">Carrinho ({{ cart_count|default:0 }})</h2>
-    <button onclick="document.getElementById('cart-sidebar').classList.remove('open')" class="p-1 text-gray-500 hover:text-gray-800">
-      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
-      </svg>
+<aside aria-label="Carrinho" :class="cartOpen ? 'open' : ''" class="cart-sidebar fixed top-0 right-0 h-full w-full max-w-sm bg-white shadow-xl z-50 flex flex-col">
+  <div class="flex items-center justify-between px-5 py-4 border-b border-ink-100">
+    <div>
+      <h2 class="font-display font-bold text-ink-900 text-lg">Carrinho</h2>
+      <p class="text-xs text-ink-500">{{ cart_count|default:0 }} item{{ cart_count|default:0|pluralize }}</p>
+    </div>
+    <button @click="cartOpen = false"
+      aria-label="Fechar"
+      class="w-9 h-9 rounded-full hover:bg-ink-100 flex items-center justify-center text-ink-500 hover:text-ink-900 transition-colors">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
     </button>
   </div>
-  <div class="flex-1 p-4 flex items-center justify-center text-gray-400 text-sm">
-    Seu carrinho está vazio.
+  <div class="flex-1 px-5 py-10 flex flex-col items-center justify-center text-center">
+    <div class="w-16 h-16 rounded-full bg-ink-50 flex items-center justify-center text-ink-300 mb-4">
+      <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/></svg>
+    </div>
+    <p class="font-display font-bold text-ink-900 mb-1">Seu carrinho está vazio</p>
+    <p class="text-sm text-ink-500 max-w-xs">Adicione produtos para vê-los aqui.</p>
   </div>
-  <div class="p-4 border-t">
-    <a href="/carrinho" class="block w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-center text-sm transition-colors">
-      Ver carrinho
+  <div class="px-5 py-4 border-t border-ink-100 bg-ink-50/50">
+    <a href="/produtos" class="block w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-full text-center text-sm transition-colors shadow-primary">
+      Ver produtos
     </a>
   </div>
 </aside>
-
-<script>
-  let currentSlide = 0;
-  const slides = document.querySelectorAll('.carousel-item');
-  const dots = document.querySelectorAll('.carousel-dot');
-
-  function updateCarousel() {
-    slides.forEach((s, i) => s.classList.toggle('active', i === currentSlide));
-    dots.forEach((d, i) => {
-      d.classList.toggle('bg-white', i === currentSlide);
-      d.classList.toggle('scale-125', i === currentSlide);
-      d.classList.toggle('bg-white/60', i !== currentSlide);
-    });
-  }
-
-  function moveCarousel(dir) {
-    currentSlide = (currentSlide + dir + slides.length) % slides.length;
-    updateCarousel();
-  }
-
-  function goToSlide(n) { currentSlide = n; updateCarousel(); }
-
-  setInterval(() => moveCarousel(1), 5000);
-  updateCarousel();
-
-  document.getElementById('cart-btn').addEventListener('click', () => {
-    document.getElementById('cart-overlay').classList.remove('hidden');
-    document.getElementById('cart-sidebar').classList.add('open');
-  });
-</script>
 
 </body>
 </html>
