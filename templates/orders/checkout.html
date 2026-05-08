@@ -1,0 +1,210 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Finalizar Pedido — Music Mais</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',600:'#2563eb',700:'#1d4ed8',800:'#1e40af'}}}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>body{font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
+  Frete grátis acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros
+</div>
+
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
+    <a href="{% url 'home:index' %}" class="text-2xl font-extrabold text-primary-700 tracking-tight flex-shrink-0">
+      Music<span class="text-gray-800">Mais</span>
+    </a>
+    <form method="get" action="{% url 'catalog:search' %}" class="flex-1 max-w-xl hidden md:block">
+      <div class="relative">
+        <input type="search" name="q" placeholder="Buscar instrumentos, marcas..."
+          class="w-full pl-4 pr-12 py-2.5 border border-gray-300 rounded-full text-sm focus:outline-none focus:ring-2 focus:ring-primary-500" />
+        <button type="submit" class="absolute right-0 top-0 h-full px-4 bg-primary-600 hover:bg-primary-700 text-white rounded-r-full">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+          </svg>
+        </button>
+      </div>
+    </form>
+    <nav class="flex items-center gap-4 text-sm text-gray-600">
+      <a href="{% url 'orders:order_list' %}" class="hover:text-primary-700">Meus Pedidos</a>
+      <a href="{% url 'authentification:logout' %}" class="hover:text-primary-700">Sair</a>
+      <a href="{% url 'cart:cart' %}" class="hover:text-primary-700">
+        Carrinho{% if cart_count %} ({{ cart_count }}){% endif %}
+      </a>
+    </nav>
+  </div>
+</header>
+
+{% if messages %}
+<div class="max-w-5xl mx-auto px-4 pt-4">
+  {% for msg in messages %}
+  <div class="mb-2 px-4 py-3 rounded-lg text-sm
+    {% if msg.tags == 'success' %}bg-green-50 text-green-700 border border-green-200
+    {% elif msg.tags == 'error' %}bg-red-50 text-red-700 border border-red-200
+    {% else %}bg-blue-50 text-blue-700 border border-blue-200{% endif %}">
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+<div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <h1 class="text-2xl font-bold text-gray-900 mb-6">Finalizar Pedido</h1>
+
+  <form method="post" novalidate>
+    {% csrf_token %}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
+      {# Formulário de endereço e pagamento #}
+      <div class="lg:col-span-2 space-y-6">
+
+        <div class="bg-white rounded-2xl shadow-sm p-6">
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Endereço de entrega</h2>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_name.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.shipping_name }}
+              {% if form.shipping_name.errors %}
+              <p class="mt-1 text-xs text-red-500">{{ form.shipping_name.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_cep.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.shipping_cep }}
+              {% if form.shipping_cep.errors %}
+              <p class="mt-1 text-xs text-red-500">{{ form.shipping_cep.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_neighborhood.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.shipping_neighborhood }}
+              {% if form.shipping_neighborhood.errors %}
+              <p class="mt-1 text-xs text-red-500">{{ form.shipping_neighborhood.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_street.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.shipping_street }}
+              {% if form.shipping_street.errors %}
+              <p class="mt-1 text-xs text-red-500">{{ form.shipping_street.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <div class="sm:col-span-2">
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_complement.label }}
+              </label>
+              {{ form.shipping_complement }}
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_city.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.shipping_city }}
+              {% if form.shipping_city.errors %}
+              <p class="mt-1 text-xs text-red-500">{{ form.shipping_city.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+            <div>
+              <label class="block text-xs font-medium text-gray-600 mb-1">
+                {{ form.shipping_state.label }} <span class="text-red-500">*</span>
+              </label>
+              {{ form.shipping_state }}
+              {% if form.shipping_state.errors %}
+              <p class="mt-1 text-xs text-red-500">{{ form.shipping_state.errors.0 }}</p>
+              {% endif %}
+            </div>
+
+          </div>
+        </div>
+
+        <div class="bg-white rounded-2xl shadow-sm p-6">
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Forma de pagamento</h2>
+          <div class="space-y-3">
+            {% for radio in form.payment_method %}
+            <label class="flex items-center gap-3 p-3 border border-gray-200 rounded-xl cursor-pointer hover:border-primary-400 has-[:checked]:border-primary-600 has-[:checked]:bg-primary-50 transition-colors">
+              {{ radio.tag }}
+              <span class="text-sm font-medium text-gray-700">{{ radio.choice_label }}</span>
+            </label>
+            {% endfor %}
+          </div>
+          <p class="text-xs text-gray-400 mt-3">Simulação — nenhuma cobrança real será feita.</p>
+        </div>
+
+      </div>
+
+      {# Resumo do pedido #}
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-2xl shadow-sm p-6 sticky top-24">
+          <h2 class="text-base font-semibold text-gray-900 mb-4">Resumo</h2>
+          <ul class="space-y-3 mb-4">
+            {% for item in cart_items %}
+            <li class="flex items-center gap-3 text-sm">
+              {% if item.main_image %}
+              <img src="{{ item.main_image.url }}" alt="{{ item.name }}" class="w-10 h-10 object-cover rounded-lg bg-gray-50 flex-shrink-0" />
+              {% else %}
+              <div class="w-10 h-10 rounded-lg bg-gray-100 flex-shrink-0"></div>
+              {% endif %}
+              <div class="flex-1 min-w-0">
+                <p class="truncate text-gray-800 font-medium leading-tight">{{ item.name }}</p>
+                <p class="text-gray-400 text-xs">Qtd: {{ item.qty }}</p>
+              </div>
+              <span class="font-semibold text-gray-800 whitespace-nowrap">R$&nbsp;{{ item.subtotal|floatformat:2 }}</span>
+            </li>
+            {% endfor %}
+          </ul>
+          <div class="border-t pt-4 space-y-1 text-sm">
+            <div class="flex justify-between text-gray-500">
+              <span>Subtotal</span>
+              <span>R$&nbsp;{{ total|floatformat:2 }}</span>
+            </div>
+            <div class="flex justify-between text-gray-500">
+              <span>Frete</span>
+              <span class="text-green-600 font-medium">Grátis</span>
+            </div>
+            <div class="flex justify-between font-bold text-gray-900 text-base mt-2">
+              <span>Total</span>
+              <span>R$&nbsp;{{ total|floatformat:2 }}</span>
+            </div>
+          </div>
+          <button type="submit"
+            class="mt-5 block w-full bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-center text-sm transition-colors">
+            Confirmar Pedido
+          </button>
+          <a href="{% url 'cart:cart' %}"
+            class="mt-2 block w-full text-center text-sm text-gray-500 hover:text-gray-700 py-2">
+            ← Voltar ao carrinho
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </form>
+</div>
+
+<footer class="bg-gray-900 text-gray-500 text-xs text-center py-6 mt-12">
+  &copy; 2025 Music Mais. Todos os direitos reservados.
+</footer>
+
+</body>
+</html>

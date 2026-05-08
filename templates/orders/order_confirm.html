@@ -1,0 +1,97 @@
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="pt-BR" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8" /><meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pedido #{{ order.pk }} Confirmado — Music Mais</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config={theme:{extend:{colors:{primary:{50:'#eff6ff',100:'#dbeafe',600:'#2563eb',700:'#1d4ed8',800:'#1e40af'}}}}}</script>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>body{font-family:Inter,system-ui,sans-serif}</style>
+</head>
+<body class="bg-gray-50 text-gray-800 antialiased">
+
+<div class="bg-primary-700 text-white text-xs py-2 text-center hidden sm:block">
+  Frete grátis acima de R$&nbsp;299 &nbsp;|&nbsp; Parcele em até 12x sem juros
+</div>
+
+<header class="bg-white shadow-sm sticky top-0 z-40">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16 gap-4">
+    <a href="{% url 'home:index' %}" class="text-2xl font-extrabold text-primary-700 tracking-tight flex-shrink-0">
+      Music<span class="text-gray-800">Mais</span>
+    </a>
+    <nav class="flex items-center gap-4 text-sm text-gray-600">
+      <a href="{% url 'orders:order_list' %}" class="hover:text-primary-700">Meus Pedidos</a>
+      <a href="{% url 'cart:cart' %}" class="hover:text-primary-700">
+        Carrinho{% if cart_count %} ({{ cart_count }}){% endif %}
+      </a>
+    </nav>
+  </div>
+</header>
+
+<div class="max-w-2xl mx-auto px-4 sm:px-6 py-12">
+
+  <div class="text-center mb-8">
+    <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+      <svg class="w-8 h-8 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+    </div>
+    <h1 class="text-2xl font-bold text-gray-900">Pedido confirmado!</h1>
+    <p class="text-gray-500 mt-1">Pedido <span class="font-semibold text-gray-700">#{{ order.pk }}</span> recebido com sucesso.</p>
+  </div>
+
+  <div class="bg-white rounded-2xl shadow-sm p-6 mb-4">
+    <h2 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b">Itens do pedido</h2>
+    <ul class="space-y-3">
+      {% for item in order.items.all %}
+      <li class="flex justify-between items-center text-sm">
+        <span class="text-gray-700">{{ item.quantity }}x {{ item.instrument.name }}</span>
+        <span class="font-semibold text-gray-900">R$&nbsp;{{ item.subtotal|floatformat:2 }}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    <div class="flex justify-between font-bold text-gray-900 text-base border-t mt-4 pt-4">
+      <span>Total</span>
+      <span>R$&nbsp;{{ order.total_price|floatformat:2 }}</span>
+    </div>
+  </div>
+
+  {% if order.shipping_name %}
+  <div class="bg-white rounded-2xl shadow-sm p-6 mb-4">
+    <h2 class="text-sm font-semibold text-gray-700 mb-3 pb-2 border-b">Endereço de entrega</h2>
+    <p class="text-sm text-gray-700">{{ order.shipping_name }}</p>
+    <p class="text-sm text-gray-600">{{ order.shipping_street }}{% if order.shipping_complement %}, {{ order.shipping_complement }}{% endif %}</p>
+    <p class="text-sm text-gray-600">{{ order.shipping_neighborhood }} — {{ order.shipping_city }}/{{ order.shipping_state }}</p>
+    <p class="text-sm text-gray-600">CEP {{ order.shipping_cep }}</p>
+  </div>
+  {% endif %}
+
+  <div class="bg-white rounded-2xl shadow-sm p-6 mb-6">
+    <div class="flex items-center justify-between text-sm">
+      <span class="text-gray-600">Status</span>
+      <span class="px-2.5 py-1 rounded-full text-xs font-semibold {{ order.status_css }}">
+        {{ order.get_status_display }}
+      </span>
+    </div>
+  </div>
+
+  <div class="flex flex-col sm:flex-row gap-3">
+    <a href="{% url 'orders:order_list' %}"
+       class="flex-1 text-center bg-primary-600 hover:bg-primary-700 text-white font-bold py-3 rounded-xl text-sm transition-colors">
+      Ver Meus Pedidos
+    </a>
+    <a href="{% url 'catalog:list' %}"
+       class="flex-1 text-center border border-gray-200 text-gray-700 hover:bg-gray-50 font-bold py-3 rounded-xl text-sm transition-colors">
+      Continuar Comprando
+    </a>
+  </div>
+
+</div>
+
+<footer class="bg-gray-900 text-gray-500 text-xs text-center py-6 mt-12">
+  &copy; 2025 Music Mais. Todos os direitos reservados.
+</footer>
+
+</body>
+</html>

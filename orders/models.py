@@ -29,6 +29,13 @@ class Order(models.Model):
     customer = models.ForeignKey(User, on_delete=models.PROTECT, related_name="orders")
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default=STATUS_PENDING)
     total_price = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    shipping_name = models.CharField(max_length=150, blank=True)
+    shipping_cep = models.CharField(max_length=9, blank=True)
+    shipping_street = models.CharField(max_length=250, blank=True)
+    shipping_complement = models.CharField(max_length=100, blank=True)
+    shipping_neighborhood = models.CharField(max_length=100, blank=True)
+    shipping_city = models.CharField(max_length=100, blank=True)
+    shipping_state = models.CharField(max_length=2, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
@@ -53,6 +60,7 @@ class OrderItem(models.Model):
     )
     quantity = models.PositiveIntegerField(default=1)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         verbose_name = "Item do Pedido"
@@ -87,6 +95,7 @@ class Payment(models.Model):
     gateway_reference = models.CharField(max_length=255, blank=True)
     paid_at = models.DateTimeField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     history = HistoricalRecords()
 
     class Meta:
