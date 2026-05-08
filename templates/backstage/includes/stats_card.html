@@ -1,0 +1,30 @@
+{# stats_card.html — uso: {% include "..." with title="..." value="..." icon="..." color="blue" %} #}
+{% with border_color=color|default:"blue" %}
+<div class="bg-white rounded-xl border-l-4
+            {% if border_color == 'blue' %}border-blue-500
+            {% elif border_color == 'green' %}border-green-500
+            {% elif border_color == 'red' %}border-red-500
+            {% elif border_color == 'yellow' %}border-yellow-500
+            {% elif border_color == 'purple' %}border-purple-500
+            {% elif border_color == 'amber' %}border-amber-500
+            {% else %}border-gray-400{% endif %}
+            p-5 shadow-sm">
+  <div class="flex items-center justify-between">
+    <div>
+      <p class="text-xs font-medium text-gray-500 uppercase tracking-wide">{{ title }}</p>
+      <p class="text-3xl font-bold text-gray-800 mt-1">{{ value }}</p>
+      {% if subtitle %}<p class="text-xs text-gray-400 mt-1">{{ subtitle }}</p>{% endif %}
+    </div>
+    <div class="flex-shrink-0">
+      <i class="{{ icon|default:'fa-solid fa-circle-info' }} text-3xl
+                {% if border_color == 'blue' %}text-blue-300
+                {% elif border_color == 'green' %}text-green-300
+                {% elif border_color == 'red' %}text-red-300
+                {% elif border_color == 'yellow' %}text-yellow-300
+                {% elif border_color == 'purple' %}text-purple-300
+                {% elif border_color == 'amber' %}text-amber-300
+                {% else %}text-gray-300{% endif %}"></i>
+    </div>
+  </div>
+</div>
+{% endwith %}

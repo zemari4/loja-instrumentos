@@ -1,7 +1,9 @@
 from django.contrib import admin
+from import_export.admin import ImportExportMixin
 from simple_history.admin import SimpleHistoryAdmin
 
-from .models import Brand, Category, Instrument, ProductImage
+from .models import Brand, Category, Instrument, ProductImage, StockMovement
+from .resources import InstrumentResource
 
 
 @admin.register(Category)
@@ -26,7 +28,8 @@ class ProductImageInline(admin.TabularInline):
 
 
 @admin.register(Instrument)
-class InstrumentAdmin(SimpleHistoryAdmin):
+class InstrumentAdmin(ImportExportMixin, SimpleHistoryAdmin):
+    resource_classes = [InstrumentResource]
     list_display = ["name", "brand", "category", "price", "stock", "is_active", "is_featured", "views_count"]
     list_filter = ["is_active", "is_featured", "category", "brand"]
     list_editable = ["is_active", "is_featured", "stock"]
@@ -40,3 +43,11 @@ class InstrumentAdmin(SimpleHistoryAdmin):
         ("Visibilidade", {"fields": ("is_active", "is_featured")}),
         ("Métricas", {"fields": ("views_count", "created_at", "updated_at")}),
     )
+
+
+@admin.register(StockMovement)
+class StockMovementAdmin(admin.ModelAdmin):
+    list_display = ["instrument", "quantity_change", "movement_type", "created_by", "created_at"]
+    list_filter = ["movement_type", "created_at"]
+    search_fields = ["instrument__name", "notes"]
+    readonly_fields = ["created_at"]

@@ -1,0 +1,85 @@
+{% extends "backstage/layouts/base.html" %}
+
+{% block title %}Pedidos{% endblock %}
+{% block page_title %}Gestão de Pedidos{% endblock %}
+
+{% block content %}
+
+{# Filtros #}
+<div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Status</label>
+      <select name="status" class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <option value="">Todos</option>
+        {% for value, label in status_choices %}
+        <option value="{{ value }}" {% if selected_status == value %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+      <i class="fa-solid fa-filter mr-1"></i>Filtrar
+    </button>
+    {% if selected_status %}
+    <a href="{% url 'backstage:orders' %}" class="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-xmark mr-1"></i>Limpar
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+{# Tabela de pedidos #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b">
+    <h2 class="font-semibold text-gray-700 text-sm">
+      <i class="fa-solid fa-bag-shopping mr-2 text-gray-400"></i>
+      Pedidos ({{ page_obj.paginator.count }})
+    </h2>
+  </div>
+
+  {% if orders %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-3">Pedido</th>
+          <th class="px-6 py-3">Cliente</th>
+          <th class="px-6 py-3">Total</th>
+          <th class="px-6 py-3">Status</th>
+          <th class="px-6 py-3">Data</th>
+          <th class="px-6 py-3">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for order in orders %}
+        <tr class="hover:bg-gray-50">
+          <td class="px-6 py-3 font-medium text-amber-600">#{{ order.pk }}</td>
+          <td class="px-6 py-3 text-gray-700">
+            <div>{{ order.customer.get_full_name|default:order.customer.username }}</div>
+            <div class="text-xs text-gray-400">{{ order.customer.email }}</div>
+          </td>
+          <td class="px-6 py-3 font-semibold text-gray-800">R$ {{ order.total_price|floatformat:2 }}</td>
+          <td class="px-6 py-3">
+            <span class="px-2 py-0.5 rounded-full text-xs font-medium {{ order.status_css }}">
+              {{ order.get_status_display }}
+            </span>
+          </td>
+          <td class="px-6 py-3 text-gray-500">{{ order.created_at|date:"d/m/Y H:i" }}</td>
+          <td class="px-6 py-3">
+            <a href="{% url 'backstage:order_detail' pk=order.pk %}"
+               class="text-xs text-amber-600 hover:text-amber-700 font-medium">
+              <i class="fa-solid fa-eye mr-1"></i>Ver
+            </a>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "backstage/includes/pagination.html" %}
+  {% else %}
+  {% include "backstage/includes/empty_state.html" with message="Nenhum pedido encontrado." icon="fa-solid fa-bag-shopping" %}
+  {% endif %}
+</div>
+
+{% endblock %}

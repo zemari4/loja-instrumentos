@@ -29,6 +29,11 @@ django-markdownify==0.9.6
 bleach==6.3.0
 pillow==12.1.1
 
+# ── Import / Export ───────────────────────────────
+django-import-export==4.3.3
+openpyxl==3.1.5
+tablib==3.8.0
+
 # ── Rate limit / Utils ────────────────────────────
 django-ratelimit==4.1.0
 django-user-agents==0.4.0
