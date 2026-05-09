@@ -322,7 +322,7 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or "musicmais@localhost"
 # ── TAILWIND ──────────────────────────────────────────────────────────────────
 
 TAILWIND_APP_NAME = "musicmaisCSS"
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd"
+NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd" if os.name == "nt" else "/usr/bin/npm"
 
 # ── I18N / TZ ─────────────────────────────────────────────────────────────────
 
