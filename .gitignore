@@ -13,8 +13,7 @@ htmlcov/
 .pytest_cache/
 node_modules/
 theme/static_src/node_modules/
-dist/
-!musicmaisCSS/static/css/dist/styles.css
+/dist/
 build/
 *.egg-info/
 .DS_Store
