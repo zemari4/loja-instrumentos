@@ -43,3 +43,4 @@ python-dotenv==1.2.2
 pytz==2026.1.post1
 humanize==4.15.0
 requests==2.32.3
+PyJWT==2.10.1
