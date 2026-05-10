@@ -27,6 +27,7 @@ env = environ.Env(
     GA_ID=(str, None),
     GTM_ID=(str, None),
     ANTHROPIC_API_KEY=(str, None),
+    FIELD_ENCRYPTION_KEY=(str, None),
 )
 
 
@@ -56,6 +57,7 @@ with open(BASE_DIR / "pyproject.toml", "rb") as _f:
 
 BASE_URL = env("BASE_URL")
 SECRET_KEY = env("SECRET_KEY")
+FIELD_ENCRYPTION_KEY = env("FIELD_ENCRYPTION_KEY", default=None)
 DEBUG = False  # sobrescrito nos settings_dev/prod
 
 _env_hosts = env.list("ALLOWED_HOSTS", default=[])

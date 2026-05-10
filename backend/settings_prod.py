@@ -1,3 +1,5 @@
+from django.core.exceptions import ImproperlyConfigured
+
 from backend.settings_base import *
 
 DEBUG = False
@@ -11,11 +13,21 @@ SECURE_HSTS_PRELOAD = True
 SECURE_CONTENT_TYPE_NOSNIFF = True
 SECURE_PROXY_SSL_HEADER = ("HTTP_X_FORWARDED_PROTO", "https")
 
+if SECRET_KEY == "change-me" or not SECRET_KEY:
+    raise ImproperlyConfigured(
+        "Configure a variável de ambiente SECRET_KEY para produção."
+    )
+
+if not FIELD_ENCRYPTION_KEY:
+    raise ImproperlyConfigured(
+        "Configure a variável de ambiente FIELD_ENCRYPTION_KEY para produção."
+    )
+
 ALLOWED_HOSTS = list(filter(None, [
     env("PRIMARY_HOST", default=None),
     "musicmais.com.br",
     "www.musicmais.com.br",
-])) or ["*"]
+]))
 
 CSRF_TRUSTED_ORIGINS = list(filter(None, [
     env("PRIMARY_ORIGIN", default=None),

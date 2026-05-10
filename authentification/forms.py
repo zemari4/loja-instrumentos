@@ -1,3 +1,5 @@
+import re
+
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
@@ -105,6 +107,21 @@ class ProfileForm(forms.ModelForm):
             self.fields["last_name"].initial = user.last_name
             self.fields["email"].initial = user.email
         self._user = user
+
+    def clean_cpf(self):
+        cpf = re.sub(r"\D", "", self.cleaned_data.get("cpf", ""))
+        if not cpf:
+            return ""
+        if len(cpf) != 11 or len(set(cpf)) == 1:
+            raise forms.ValidationError("CPF inválido.")
+        for i, peso_inicial in enumerate([10, 11]):
+            total = sum(int(d) * (peso_inicial - j) for j, d in enumerate(cpf[:9 + i]))
+            resto = (total * 10) % 11
+            if resto >= 10:
+                resto = 0
+            if resto != int(cpf[9 + i]):
+                raise forms.ValidationError("CPF inválido.")
+        return cpf
 
     def save(self, commit=True):
         profile = super().save(commit=False)
