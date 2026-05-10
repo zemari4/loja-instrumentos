@@ -2,11 +2,13 @@ from django.contrib.auth.models import User
 from django.db import models
 from simple_history.models import HistoricalRecords
 
+from .fields import EncryptedCharField
+
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="profile")
     telefone = models.CharField(max_length=20, blank=True)
-    cpf = models.CharField(max_length=14, blank=True)
+    cpf = EncryptedCharField(blank=True)
     avatar = models.ImageField(upload_to="avatars/", blank=True, null=True)
     history = HistoricalRecords()
 

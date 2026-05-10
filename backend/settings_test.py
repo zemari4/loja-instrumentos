@@ -2,6 +2,7 @@ from backend.settings_base import *
 
 DEBUG = True
 ALLOWED_HOSTS = ["*", "localhost", "127.0.0.1"]
+FIELD_ENCRYPTION_KEY = "XisV3giLTCZ3mTPzRMRT5zgMIjiADVRY38fU8iYwdfE="
 
 STORAGES = {
     "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},

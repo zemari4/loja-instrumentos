@@ -3,6 +3,7 @@ from django.contrib.auth import login, logout
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
+from django.utils.http import url_has_allowed_host_and_scheme
 from django.shortcuts import redirect
 from django.views.generic import FormView, TemplateView, UpdateView
 
@@ -45,7 +46,9 @@ class LoginView(FormView):
 
     def get_success_url(self):
         next_url = self.request.GET.get("next") or self.request.POST.get("next")
-        return next_url or "/"
+        if next_url and url_has_allowed_host_and_scheme(next_url, allowed_hosts={self.request.get_host()}):
+            return next_url
+        return "/"
 
 
 @method_decorator(ratelimit(key="ip", rate="5/m", method="POST", block=True), name="post")
