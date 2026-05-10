@@ -13,7 +13,7 @@ htmlcov/
 .pytest_cache/
 node_modules/
 theme/static_src/node_modules/
-dist/
+/dist/
 build/
 *.egg-info/
 .DS_Store
