@@ -1,3 +1,4 @@
+{% load markdown_extras %}
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
@@ -298,82 +299,100 @@
 {% endif %}
 
 {# HERO CAROUSEL #}
+{% if carousel_slides %}
 <section class="relative overflow-hidden bg-ink-50">
   <div class="relative"
        x-data="{
          current: 0,
-         total: 3,
+         total: {{ carousel_slides|length }},
          move(dir) { this.current = (this.current + dir + this.total) % this.total },
          go(n) { this.current = n }
        }"
        x-init="if (!window.matchMedia('(prefers-reduced-motion: reduce)').matches) setInterval(() => move(1), 6000)">
 
-    <div x-show="current === 0" x-cloak>
-      <div class="relative h-72 sm:h-96 md:h-96 lg:h-96 bg-gradient-to-br from-primary-700 via-primary-800 to-ink-900 flex items-center overflow-hidden">
+    {% for slide in carousel_slides %}
+    <div x-show="current === {{ forloop.counter0 }}" x-cloak>
+      <div class="relative h-72 sm:h-96 bg-gradient-to-br from-primary-700 via-primary-800 to-ink-900 flex items-center overflow-hidden">
+
+        {# Imagem de fundo #}
+        {% if slide.image_desktop and slide.image_mobile %}
+        <img src="{{ slide.image_desktop.url }}" alt=""
+             class="absolute inset-0 w-full h-full object-cover hidden sm:block">
+        <img src="{{ slide.image_mobile.url }}" alt=""
+             class="absolute inset-0 w-full h-full object-cover block sm:hidden">
+        {% elif slide.image_desktop %}
+        <img src="{{ slide.image_desktop.url }}" alt=""
+             class="absolute inset-0 w-full h-full object-cover">
+        {% elif slide.image_mobile %}
+        <img src="{{ slide.image_mobile.url }}" alt=""
+             class="absolute inset-0 w-full h-full object-cover block sm:hidden">
+        <div class="absolute inset-0 hidden sm:block opacity-30">
+          <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-400 blur-3xl"></div>
+          <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary-500 blur-3xl"></div>
+        </div>
+        {% else %}
         <div class="absolute inset-0 opacity-30">
           <div class="absolute -top-32 -right-32 w-96 h-96 rounded-full bg-primary-400 blur-3xl"></div>
           <div class="absolute -bottom-32 -left-32 w-96 h-96 rounded-full bg-primary-500 blur-3xl"></div>
         </div>
+        {% endif %}
+
+        {# Overlay escuro sobre imagem para legibilidade do texto #}
+        {% if slide.image_desktop or slide.image_mobile %}
+        <div class="absolute inset-0 bg-ink-900/40"></div>
+        {% endif %}
+
+        {# Conteúdo #}
         <div class="relative max-w-7xl mx-auto px-6 sm:px-10 w-full">
-          <div class="max-w-xl">
-            <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">
-              <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse"></span>
-              Lançamento
-            </span>
-            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">
-              Guitarras<br/>até <span class="text-accent-400">30% OFF</span>
-            </h2>
-            <p class="text-primary-100 text-base sm:text-lg mb-8 max-w-md">Os melhores instrumentos das marcas que você ama, com o melhor preço do mercado.</p>
-            <div class="flex flex-wrap gap-3">
-              <a href="/categoria/cordas" class="inline-flex items-center gap-2 bg-white text-primary-700 font-bold py-3.5 px-7 rounded-full hover:bg-primary-50 transition-all shadow-primary-lg hover:-translate-y-0.5">
-                Ver ofertas
-                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-              </a>
-              <a href="/categoria/cordas/guitarras" class="inline-flex items-center bg-white/10 backdrop-blur ring-1 ring-white/20 text-white font-semibold py-3.5 px-6 rounded-full hover:bg-white/20 transition-all">Explorar guitarras</a>
+          <div class="max-w-xl
+            {% if slide.text_alignment == 'center' %}mx-auto text-center
+            {% elif slide.text_alignment == 'right' %}ml-auto text-right
+            {% endif %}">
+
+            {# Marcadores #}
+            {% if slide.is_launch or slide.is_promo %}
+            <div class="flex gap-2 mb-4
+              {% if slide.text_alignment == 'center' %}justify-center
+              {% elif slide.text_alignment == 'right' %}justify-end
+              {% endif %}">
+              {% if slide.is_launch %}
+              <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse"></span>
+                Lançamento
+              </span>
+              {% endif %}
+              {% if slide.is_promo %}
+              <span class="inline-flex items-center gap-2 bg-accent-500/20 backdrop-blur ring-1 ring-accent-400/40 text-accent-200 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                <span class="w-1.5 h-1.5 rounded-full bg-accent-400 animate-pulse"></span>
+                Promoção
+              </span>
+              {% endif %}
             </div>
+            {% endif %}
+
+            {# Título #}
+            {% if slide.title %}
+            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">
+              {{ slide.title|render_md }}
+            </h2>
+            {% endif %}
+
+            {# Subtítulo #}
+            {% if slide.subtitle %}
+            <div class="text-primary-100 text-base sm:text-lg max-w-md
+              {% if slide.text_alignment == 'center' %}mx-auto{% elif slide.text_alignment == 'right' %}ml-auto{% endif %}">
+              {{ slide.subtitle|render_md }}
+            </div>
+            {% endif %}
+
           </div>
         </div>
       </div>
     </div>
+    {% endfor %}
 
-    <div x-show="current === 1" x-cloak>
-      <div class="relative h-72 sm:h-96 md:h-96 lg:h-96 bg-gradient-to-br from-ink-900 via-primary-950 to-primary-700 flex items-center overflow-hidden">
-        <div class="absolute inset-0 opacity-25">
-          <div class="absolute top-1/4 left-1/4 w-96 h-96 rounded-full bg-primary-500 blur-3xl"></div>
-        </div>
-        <div class="relative max-w-7xl mx-auto px-6 sm:px-10 w-full">
-          <div class="max-w-xl">
-            <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">Em destaque</span>
-            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">Baterias<br/>Acústicas</h2>
-            <p class="text-primary-100 text-base sm:text-lg mb-8 max-w-md">Kits completos para iniciantes e profissionais — direto da marca para a sua casa.</p>
-            <a href="/categoria/bateria" class="inline-flex items-center gap-2 bg-primary-500 text-white font-bold py-3.5 px-7 rounded-full hover:bg-primary-400 transition-all shadow-primary-lg hover:-translate-y-0.5">
-              Explorar
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div x-show="current === 2" x-cloak>
-      <div class="relative h-72 sm:h-96 md:h-96 lg:h-96 bg-gradient-to-br from-primary-800 via-primary-700 to-primary-500 flex items-center overflow-hidden">
-        <div class="absolute inset-0 opacity-30">
-          <div class="absolute -top-20 right-1/4 w-96 h-96 rounded-full bg-white blur-3xl"></div>
-        </div>
-        <div class="relative max-w-7xl mx-auto px-6 sm:px-10 w-full">
-          <div class="max-w-xl">
-            <span class="inline-flex items-center gap-2 bg-white/10 backdrop-blur ring-1 ring-white/20 text-primary-100 text-xs font-semibold px-3 py-1.5 rounded-full uppercase tracking-wider mb-4">Novidade</span>
-            <h2 class="font-display text-white text-4xl sm:text-5xl lg:text-display-xl mb-5">Pianos Digitais<br/>Roland &amp; Yamaha</h2>
-            <p class="text-primary-100 text-base sm:text-lg mb-8 max-w-md">Toque como um profissional em casa, com som de estúdio.</p>
-            <a href="/categoria/teclados" class="inline-flex items-center gap-2 bg-white text-primary-700 font-bold py-3.5 px-7 rounded-full hover:bg-primary-50 transition-all shadow-primary-lg hover:-translate-y-0.5">
-              Ver linha completa
-              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
+    {# Controles de navegação (apenas com mais de 1 slide) #}
+    {% if carousel_slides|length > 1 %}
     <button @click="move(-1)" aria-label="Slide anterior"
       class="absolute left-4 top-1/2 -translate-y-1/2 w-11 h-11 bg-white/90 hover:bg-white text-ink-800 rounded-full shadow-lg backdrop-blur transition-all hover:scale-105 z-10 flex items-center justify-center">
       <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M15 19l-7-7 7-7"/></svg>
@@ -384,12 +403,17 @@
     </button>
 
     <div class="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
-      <button @click="go(0)" aria-label="Slide 1" :class="current === 0 ? 'bg-white w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all"></button>
-      <button @click="go(1)" aria-label="Slide 2" :class="current === 1 ? 'bg-white w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all"></button>
-      <button @click="go(2)" aria-label="Slide 3" :class="current === 2 ? 'bg-white w-6' : 'bg-white/50 w-2'" class="h-2 rounded-full transition-all"></button>
+      {% for slide in carousel_slides %}
+      <button @click="go({{ forloop.counter0 }})" aria-label="Slide {{ forloop.counter }}"
+              :class="current === {{ forloop.counter0 }} ? 'bg-white w-6' : 'bg-white/50 w-2'"
+              class="h-2 rounded-full transition-all"></button>
+      {% endfor %}
     </div>
+    {% endif %}
+
   </div>
 </section>
+{% endif %}
 
 {# CATEGORIAS DESTAQUE #}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

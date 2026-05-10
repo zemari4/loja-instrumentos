@@ -1,0 +1,1 @@
+Adiciona seção de Personalização do Site no Backstage com gerenciamento de slides do carrossel da home, incluindo suporte a imagens desktop e mobile, marcadores de Lançamento e Promoção, e textos com formatação markdown.

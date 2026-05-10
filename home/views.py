@@ -2,6 +2,8 @@ from django.http import HttpResponse
 from django.shortcuts import render
 from django.views import View
 
+from home.models import CarouselSlide
+
 
 class HomeView(View):
     def get(self, request):
@@ -10,6 +12,7 @@ class HomeView(View):
         ctx = {
             "cart_count": sum(item.get("qty", 0) for item in cart.values()),
             "featured_products": get_most_viewed(6),
+            "carousel_slides": CarouselSlide.objects.filter(is_active=True).order_by("order"),
         }
         return render(request, "home/index.html", ctx)
 

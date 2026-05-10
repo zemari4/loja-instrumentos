@@ -2,6 +2,7 @@ from django import forms
 from django.utils.text import slugify
 
 from catalog.models import Instrument, StockMovement
+from home.models import CarouselSlide, MAX_CAROUSEL_SLIDES
 
 
 class BRDecimalField(forms.DecimalField):
@@ -69,3 +70,31 @@ class ProductImportForm(forms.Form):
         label="Arquivo CSV ou XLSX",
         help_text="Formatos aceitos: .csv, .xlsx",
     )
+
+
+class CarouselSlideForm(forms.ModelForm):
+    class Meta:
+        model = CarouselSlide
+        fields = [
+            "order", "is_active",
+            "image_desktop", "image_mobile",
+            "is_launch", "is_promo",
+            "title", "subtitle", "text_alignment",
+        ]
+        widgets = {
+            "title": forms.TextInput(attrs={"placeholder": "Ex: **Guitarras** até 30% OFF"}),
+            "subtitle": forms.Textarea(attrs={
+                "rows": 3,
+                "placeholder": "Ex: Os melhores instrumentos das marcas que você ama.",
+            }),
+        }
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if not self.instance.pk:
+            if CarouselSlide.objects.count() >= MAX_CAROUSEL_SLIDES:
+                raise forms.ValidationError(
+                    f"Limite de {MAX_CAROUSEL_SLIDES} slides atingido. "
+                    "Remova um slide antes de adicionar outro."
+                )
+        return cleaned_data
