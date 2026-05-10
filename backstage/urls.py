@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views.analytics import AnalyticsView
+from .views.carousel import CarouselCreateView, CarouselDeleteView, CarouselListView, CarouselUpdateView
 from .views.customers import CustomerListView
 from .views.dashboard import (
     DashboardView,
@@ -57,4 +58,9 @@ urlpatterns = [
     path("clientes/", CustomerListView.as_view(), name="customers"),
     # Analytics
     path("analytics/", AnalyticsView.as_view(), name="analytics"),
+    # Personalização do site — Carrossel
+    path("site/carrossel/", CarouselListView.as_view(), name="carousel_list"),
+    path("site/carrossel/novo/", CarouselCreateView.as_view(), name="carousel_create"),
+    path("site/carrossel/<int:pk>/editar/", CarouselUpdateView.as_view(), name="carousel_update"),
+    path("site/carrossel/<int:pk>/excluir/", CarouselDeleteView.as_view(), name="carousel_delete"),
 ]
