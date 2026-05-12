@@ -1,4 +1,5 @@
 {% load markdown_extras %}
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-BR" class="scroll-smooth">
 <head>
@@ -95,33 +96,39 @@
 {# HEADER #}
 <header class="bg-white border-b border-ink-100 sticky top-0 z-40 shadow-sm">
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-    <div class="flex items-center justify-between h-18 gap-4 py-3">
+    <div class="flex items-center justify-between h-18 py-3 md:grid md:grid-cols-3 md:gap-6">
 
-      {# Logo #}
-      <a href="/" class="flex-shrink-0 flex items-center gap-2">
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-primary">
-          <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 17.5V8a3 3 0 016 0v6.5M9 17.5a2 2 0 11-2-2M9 17.5V19a2 2 0 11-2-2m8-1.5V8a2 2 0 11-2 2"/></svg>
-        </div>
-        <span class="font-display text-xl font-extrabold tracking-tight text-ink-900">
-          Music<span class="text-primary-700">Mais</span>
-        </span>
-      </a>
-
-      {# Busca desktop #}
-      <div class="hidden md:flex flex-1 max-w-2xl">
-        <form method="get" action="/busca" role="search" class="relative w-full">
-          <svg class="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-          <input type="search" name="q" placeholder="Buscar instrumentos, marcas, categorias…"
+      {# Busca desktop (esquerda, compacta) #}
+      <div class="hidden md:flex items-center">
+        <form method="get" action="/busca" role="search" class="relative w-full max-w-xs" x-data="{ q: '' }">
+          <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-ink-400 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+          <input type="text" name="q" x-model="q"
+            :class="q.length > 0 ? 'pr-16' : 'pr-4'"
+            placeholder="Buscar instrumentos…"
             aria-label="Buscar produtos"
-            class="w-full pl-11 pr-32 py-3 bg-ink-50 border border-transparent rounded-full text-sm placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 focus:bg-white transition" />
-          <button type="submit" class="absolute right-1.5 top-1.5 bottom-1.5 px-5 bg-primary-600 hover:bg-primary-700 text-white rounded-full font-semibold text-sm shadow-primary transition-all">
-            Buscar
-          </button>
+            class="w-full pl-9 py-2 bg-ink-50 border border-transparent rounded-full text-sm placeholder:text-ink-400 focus:outline-none focus:ring-2 focus:ring-primary-500/40 focus:border-primary-500 focus:bg-white transition" />
+          <div x-show="q.length > 0" x-cloak class="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-0.5">
+            <button type="button" aria-label="Limpar" @click="q = ''"
+              class="w-6 h-6 flex items-center justify-center text-ink-400 hover:text-ink-700 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+            <button type="submit" aria-label="Buscar"
+              class="w-6 h-6 flex items-center justify-center text-primary-600 hover:text-primary-700 transition-colors">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+            </button>
+          </div>
         </form>
       </div>
 
+      {# Logo (centralizada no desktop, esquerda no mobile) #}
+      <div class="flex justify-start md:justify-center">
+        <a href="/" class="flex-shrink-0">
+          <img src="{% static 'images/logo-transp.png' %}" alt="MusicMais" class="h-10 md:h-20 w-auto">
+        </a>
+      </div>
+
       {# Ações direita #}
-      <div class="flex items-center gap-1">
+      <div class="flex items-center gap-1 justify-end">
 
         {% if user.is_authenticated %}
         <a href="{% url 'authentification:profile' %}" class="hidden sm:flex items-center gap-2 px-3 py-2 rounded-xl text-ink-700 hover:bg-ink-50 hover:text-primary-700 transition-colors">
@@ -185,9 +192,9 @@
   </div>
 
   {# MEGA-MENU #}
-  <nav aria-label="Categorias" class="hidden md:block bg-white border-t border-ink-100">
+  <nav aria-label="Categorias" class="hidden md:block bg-white border-t border-ink-100 pt-3">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-      <ul class="flex items-center h-12 gap-1 text-sm font-semibold">
+      <ul class="flex items-center justify-center h-12 gap-1 text-sm font-semibold">
 
         <li class="group relative">
           <a href="/categoria/audio" class="flex items-center gap-1 px-4 h-12 text-ink-700 hover:text-primary-700 hover:bg-primary-50 rounded-lg transition-colors whitespace-nowrap">
@@ -272,12 +279,6 @@
           </a>
         </li>
 
-        <li class="ml-auto">
-          <a href="/promocoes" class="flex items-center gap-1.5 px-4 h-9 my-1.5 bg-accent-500 hover:bg-accent-600 text-white rounded-full font-bold text-sm transition-colors shadow-sm whitespace-nowrap">
-            <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 2a1 1 0 011 1v1.323l3.954 1.582 1.599-.8a1 1 0 01.894 1.79l-1.233.616 1.738 5.42a1 1 0 01-.285 1.05A3.989 3.989 0 0115 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.715-5.349L11 6.477V16h2a1 1 0 110 2H7a1 1 0 110-2h2V6.477L6.237 7.582l1.715 5.349a1 1 0 01-.285 1.05A3.989 3.989 0 015 15a3.989 3.989 0 01-2.667-1.019 1 1 0 01-.285-1.05l1.738-5.42-1.233-.617a1 1 0 01.894-1.788l1.599.799L9 4.323V3a1 1 0 011-1z" clip-rule="evenodd"/></svg>
-            Promoções
-          </a>
-        </li>
       </ul>
     </div>
   </nav>
@@ -415,52 +416,10 @@
 </section>
 {% endif %}
 
-{# CATEGORIAS DESTAQUE #}
-<section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-  <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
-    <a href="/categoria/audio" class="group relative overflow-hidden rounded-2xl h-44 bg-gradient-to-br from-primary-900 to-primary-700 p-6 flex items-end shadow hover:shadow-lg transition-all hover:-translate-y-0.5">
-      <div class="absolute inset-0 opacity-30">
-        <div class="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-primary-400 blur-2xl"></div>
-      </div>
-      <svg class="absolute top-5 right-5 w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
-      <div class="relative z-10">
-        <p class="text-white font-display font-extrabold text-2xl leading-tight">Áudio<br/>Profissional</p>
-        <p class="text-primary-200 text-sm mt-1 group-hover:text-white transition-colors flex items-center gap-1">Ver tudo <span class="transition-transform group-hover:translate-x-1">→</span></p>
-      </div>
-    </a>
-    <a href="/categoria/cordas" class="group relative overflow-hidden rounded-2xl h-44 bg-gradient-to-br from-ink-800 to-ink-900 p-6 flex items-end shadow hover:shadow-lg transition-all hover:-translate-y-0.5">
-      <div class="absolute inset-0 opacity-25">
-        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 rounded-full bg-primary-500 blur-2xl"></div>
-      </div>
-      <svg class="absolute top-5 right-5 w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3"/></svg>
-      <div class="relative z-10">
-        <p class="text-white font-display font-extrabold text-2xl leading-tight">Guitarras<br/>e Violões</p>
-        <p class="text-primary-300 text-sm mt-1 group-hover:text-white transition-colors flex items-center gap-1">Ver tudo <span class="transition-transform group-hover:translate-x-1">→</span></p>
-      </div>
-    </a>
-    <a href="/categoria/bateria" class="group relative overflow-hidden rounded-2xl h-44 bg-gradient-to-br from-primary-700 to-primary-500 p-6 flex items-end shadow hover:shadow-lg transition-all hover:-translate-y-0.5">
-      <div class="absolute inset-0 opacity-30">
-        <div class="absolute -bottom-10 -right-10 w-40 h-40 rounded-full bg-white blur-2xl"></div>
-      </div>
-      <svg class="absolute top-5 right-5 w-12 h-12 text-white/20 group-hover:text-white/30 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="1.5"/><circle cx="12" cy="12" r="4" stroke-width="1.5"/></svg>
-      <div class="relative z-10">
-        <p class="text-white font-display font-extrabold text-2xl leading-tight">Bateria<br/>e Percussão</p>
-        <p class="text-primary-100 text-sm mt-1 group-hover:text-white transition-colors flex items-center gap-1">Ver tudo <span class="transition-transform group-hover:translate-x-1">→</span></p>
-      </div>
-    </a>
-  </div>
-</section>
-
 {# PRODUTOS MAIS VISUALIZADOS #}
 <section class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-  <div class="flex items-end justify-between mb-8">
-    <div>
-      <p class="text-xs font-semibold tracking-widest uppercase text-primary-600 mb-2">Em alta</p>
-      <h2 class="font-display text-3xl sm:text-display font-bold text-ink-900">Produtos mais visualizados</h2>
-    </div>
-    <a href="/produtos" class="hidden sm:inline-flex items-center gap-1 text-primary-700 hover:text-primary-800 text-sm font-semibold transition-colors group">
-      Ver todos <span class="transition-transform group-hover:translate-x-1">→</span>
-    </a>
+  <div class="mb-8">
+    <h2 class="font-display text-xl sm:text-2xl font-bold text-ink-900 text-center">Produtos mais visualizados</h2>
   </div>
 
   {% if featured_products %}
@@ -634,13 +593,8 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-2 md:grid-cols-4 gap-10 mb-12">
       <div class="col-span-2 md:col-span-1">
-        <div class="flex items-center gap-2 mb-4">
-          <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center">
-            <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 24 24"><path d="M9 17.5V8a3 3 0 016 0v6.5M9 17.5a2 2 0 11-2-2M9 17.5V19a2 2 0 11-2-2m8-1.5V8a2 2 0 11-2 2"/></svg>
-          </div>
-          <span class="font-display text-xl font-extrabold tracking-tight text-white">
-            Music<span class="text-primary-400">Mais</span>
-          </span>
+        <div class="mb-4">
+          <img src="{% static 'images/logo-transp.png' %}" alt="MusicMais" class="h-9 w-auto">
         </div>
         <p class="text-sm leading-relaxed text-ink-400 mb-5">{{ SITE_TAGLINE }}.</p>
         <div class="flex gap-2">
