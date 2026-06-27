@@ -58,7 +58,7 @@ class TestCheckoutView:
     def test_requires_login(self, client):
         response = client.get(reverse("orders:checkout"))
         assert response.status_code == 302
-        assert reverse("authentification:login") in response["Location"]
+        assert reverse("authentication:login") in response["Location"]
 
     def test_empty_cart_redirects_to_cart(self, client, logged_user):
         response = client.get(reverse("orders:checkout"))

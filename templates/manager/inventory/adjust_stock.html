@@ -1,0 +1,90 @@
+{% extends "manager/layouts/base.html" %}
+
+{% block title %}Ajustar Estoque{% endblock %}
+{% block page_title %}Ajustar Estoque{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+
+  {# Card do produto #}
+  <div class="bg-white rounded-xl shadow-sm p-5 mb-4">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-xs text-gray-500 mb-0.5">Produto</p>
+        <p class="text-base font-semibold text-gray-800">{{ instrument }}</p>
+        <p class="text-xs text-gray-400">{{ instrument.category.name }} · {{ instrument.brand.name }}</p>
+      </div>
+      <div class="text-right">
+        <p class="text-xs text-gray-500 mb-0.5">Estoque atual</p>
+        <p class="text-2xl font-bold {% if instrument.stock == 0 %}text-red-500{% elif instrument.stock < 5 %}text-orange-500{% else %}text-gray-800{% endif %}">
+          {{ instrument.stock }}
+        </p>
+        <p class="text-xs text-gray-400">unidades</p>
+      </div>
+    </div>
+  </div>
+
+  {# Formulário #}
+  <div class="bg-white rounded-xl shadow-sm p-6">
+    <h3 class="text-sm font-semibold text-gray-700 mb-4 pb-2 border-b">Nova movimentação</h3>
+
+    <form method="post" novalidate>
+      {% csrf_token %}
+
+      <div class="space-y-4">
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label for="{{ form.movement_type.id_for_label }}" class="block text-xs font-medium text-gray-600 mb-1">
+              Tipo <span class="text-red-500">*</span>
+            </label>
+            <select name="{{ form.movement_type.html_name }}" id="{{ form.movement_type.id_for_label }}"
+                    class="w-full text-sm border {% if form.movement_type.errors %}border-red-400{% else %}border-gray-200{% endif %} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+              {% for val, label in form.movement_type.field.choices %}
+              <option value="{{ val }}" {% if form.movement_type.value == val %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+            {% if form.movement_type.errors %}<p class="mt-1 text-xs text-red-500">{{ form.movement_type.errors.0 }}</p>{% endif %}
+          </div>
+
+          <div>
+            <label for="{{ form.quantity_change.id_for_label }}" class="block text-xs font-medium text-gray-600 mb-1">
+              Quantidade <span class="text-red-500">*</span>
+            </label>
+            <input type="number" name="{{ form.quantity_change.html_name }}" id="{{ form.quantity_change.id_for_label }}"
+                   value="{{ form.quantity_change.value|default:'' }}"
+                   placeholder="Ex.: +10 ou -3"
+                   class="w-full text-sm border {% if form.quantity_change.errors %}border-red-400{% else %}border-gray-200{% endif %} rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+            <p class="mt-1 text-xs text-gray-400">Negativo para reduzir</p>
+            {% if form.quantity_change.errors %}<p class="mt-1 text-xs text-red-500">{{ form.quantity_change.errors.0 }}</p>{% endif %}
+          </div>
+        </div>
+
+        <div>
+          <label for="{{ form.notes.id_for_label }}" class="block text-xs font-medium text-gray-600 mb-1">Observações</label>
+          <input type="text" name="{{ form.notes.html_name }}" id="{{ form.notes.id_for_label }}"
+                 value="{{ form.notes.value|default:'' }}"
+                 placeholder="Nota fiscal, motivo, referência…"
+                 class="w-full text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        </div>
+
+      </div>
+
+      <div class="flex items-center gap-3 mt-6 pt-4 border-t">
+        <button type="submit"
+                class="px-6 py-2.5 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+          <i class="fa-solid fa-check mr-2"></i>Registrar movimentação
+        </button>
+        <a href="{% url 'manager:inventory' %}"
+           class="px-6 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+          Cancelar
+        </a>
+        <a href="{% url 'manager:stock_history' instrument.pk %}"
+           class="ml-auto text-xs text-gray-400 hover:text-gray-600 transition-colors">
+          <i class="fa-solid fa-clock-rotate-left mr-1"></i>Ver histórico
+        </a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}

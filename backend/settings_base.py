@@ -143,13 +143,13 @@ LOCAL_APPS = [
     "theme",
     "musicmaisCSS",
     "home",
-    "authentification",
+    "authentication",
     "analytics",
     "catalog",
     "cart",
     "orders",
     "dashboard",
-    "backstage",
+    "manager",
 ]
 
 INSTALLED_APPS = DJANGO_APPS + THIRD_PARTY_APPS + LOCAL_APPS
@@ -277,7 +277,7 @@ JAZZMIN_SETTINGS = {
         "auth": "fas fa-users-cog",
         "auth.User": "fas fa-user",
         "auth.Group": "fas fa-users",
-        "authentification": "fas fa-sign-in-alt",
+        "authentication": "fas fa-sign-in-alt",
         "catalog": "fas fa-guitar",
         "catalog.Instrument": "fas fa-guitar",
         "catalog.Category": "fas fa-tags",

@@ -1,0 +1,249 @@
+{% extends "manager/layouts/base.html" %}
+{% block title %}{{ page_title }} — Carrossel{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+
+  {# Cabeçalho #}
+  <div class="mb-6">
+    <p class="text-xs text-gray-400 uppercase tracking-wider mb-1">
+      <a href="{% url 'manager:carousel_list' %}" class="hover:text-amber-500 transition-colors">Personalização do Site / Carrossel</a>
+    </p>
+    <h1 class="text-2xl font-bold text-gray-900">{{ page_title }}</h1>
+  </div>
+
+  <form method="post" enctype="multipart/form-data" x-data="carouselForm()">
+
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+    <div class="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg text-sm">
+      {% for error in form.non_field_errors %}{{ error }}{% endfor %}
+    </div>
+    {% endif %}
+
+    {# Seção 1: Configurações gerais #}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Configurações</h2>
+
+      <div class="grid grid-cols-2 gap-4">
+
+        {# Posição #}
+        <div>
+          <label for="{{ form.order.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+            {{ form.order.label }}
+          </label>
+          <select name="{{ form.order.html_name }}" id="{{ form.order.id_for_label }}"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+            {% for val, label in form.order.field.choices %}
+            <option value="{{ val }}" {% if form.order.value|stringformat:"s" == val|stringformat:"s" %}selected{% endif %}>
+              {{ label }}
+            </option>
+            {% endfor %}
+          </select>
+          {% if form.order.errors %}
+          <p class="text-xs text-red-600 mt-1">{{ form.order.errors.0 }}</p>
+          {% endif %}
+        </div>
+
+        {# Posição do texto #}
+        <div>
+          <label for="{{ form.text_alignment.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+            {{ form.text_alignment.label }}
+          </label>
+          <select name="{{ form.text_alignment.html_name }}" id="{{ form.text_alignment.id_for_label }}"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+            {% for val, label in form.text_alignment.field.choices %}
+            <option value="{{ val }}" {% if form.text_alignment.value == val %}selected{% endif %}>{{ label }}</option>
+            {% endfor %}
+          </select>
+        </div>
+
+      </div>
+
+      {# Ativo #}
+      <div class="flex items-center gap-3 mt-4">
+        <input type="checkbox" name="{{ form.is_active.html_name }}" id="{{ form.is_active.id_for_label }}"
+               {% if form.is_active.value %}checked{% endif %}
+               class="w-4 h-4 rounded border-gray-300 text-amber-500 focus:ring-amber-400">
+        <label for="{{ form.is_active.id_for_label }}" class="text-sm font-medium text-gray-700">
+          Slide ativo (visível na home)
+        </label>
+      </div>
+
+    </div>
+
+    {# Seção 2: Imagens #}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-1">Imagens</h2>
+      <p class="text-xs text-gray-400 mb-4">
+        Se apenas a imagem desktop for enviada, ela será usada também no mobile de forma responsiva.
+        Se apenas a mobile for enviada, o desktop exibirá um gradiente.
+      </p>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+
+        {# Desktop #}
+        <div x-data="fileDropzone('desktop')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-desktop mr-1 text-gray-400"></i>
+            Imagem Desktop
+          </label>
+          <div @dragover.prevent="dragging = true"
+               @dragleave.prevent="dragging = false"
+               @drop.prevent="handleDrop($event, 'id_image_desktop')"
+               :class="dragging ? 'border-amber-400 bg-amber-50' : 'border-gray-300 bg-gray-50'"
+               class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
+               @click="$refs.desktopInput.click()">
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-300 mb-2"></i>
+            <p class="text-sm text-gray-500" x-text="fileName || 'Clique ou arraste a imagem aqui'"></p>
+            <p class="text-xs text-gray-400 mt-1">Tamanho recomendado: 1440 × 400 px</p>
+          </div>
+          <input type="file" name="{{ form.image_desktop.html_name }}" id="id_image_desktop"
+                 accept="image/*" class="hidden" x-ref="desktopInput"
+                 @change="fileName = $event.target.files[0]?.name">
+          {% if form.image_desktop.errors %}
+          <p class="text-xs text-red-600">{{ form.image_desktop.errors.0 }}</p>
+          {% endif %}
+          {% if object.image_desktop %}
+          <div class="flex items-center gap-2 mt-2">
+            <img src="{{ object.image_desktop.url }}" class="h-10 rounded border border-gray-200 object-cover">
+            <span class="text-xs text-gray-400">Imagem atual</span>
+          </div>
+          {% endif %}
+        </div>
+
+        {# Mobile #}
+        <div x-data="fileDropzone('mobile')" class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">
+            <i class="fa-solid fa-mobile-screen mr-1 text-gray-400"></i>
+            Imagem Mobile
+          </label>
+          <div @dragover.prevent="dragging = true"
+               @dragleave.prevent="dragging = false"
+               @drop.prevent="handleDrop($event, 'id_image_mobile')"
+               :class="dragging ? 'border-amber-400 bg-amber-50' : 'border-gray-300 bg-gray-50'"
+               class="border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer"
+               @click="$refs.mobileInput.click()">
+            <i class="fa-solid fa-cloud-arrow-up text-2xl text-gray-300 mb-2"></i>
+            <p class="text-sm text-gray-500" x-text="fileName || 'Clique ou arraste a imagem aqui'"></p>
+            <p class="text-xs text-gray-400 mt-1">Tamanho recomendado: 640 × 400 px</p>
+          </div>
+          <input type="file" name="{{ form.image_mobile.html_name }}" id="id_image_mobile"
+                 accept="image/*" class="hidden" x-ref="mobileInput"
+                 @change="fileName = $event.target.files[0]?.name">
+          {% if form.image_mobile.errors %}
+          <p class="text-xs text-red-600">{{ form.image_mobile.errors.0 }}</p>
+          {% endif %}
+          {% if object.image_mobile %}
+          <div class="flex items-center gap-2 mt-2">
+            <img src="{{ object.image_mobile.url }}" class="h-10 rounded border border-gray-200 object-cover">
+            <span class="text-xs text-gray-400">Imagem atual</span>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+
+    {# Seção 3: Marcadores #}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-1">Marcadores</h2>
+      <p class="text-xs text-gray-400 mb-4">Exibem um balão no topo do slide quando ativados.</p>
+
+      <div class="flex gap-6">
+        <div class="flex items-center gap-3">
+          <input type="checkbox" name="{{ form.is_launch.html_name }}" id="{{ form.is_launch.id_for_label }}"
+                 {% if form.is_launch.value %}checked{% endif %}
+                 class="w-4 h-4 rounded border-gray-300 text-blue-500 focus:ring-blue-400">
+          <label for="{{ form.is_launch.id_for_label }}" class="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <span class="inline-block bg-blue-100 text-blue-700 text-xs px-2 py-0.5 rounded-full font-semibold">Lançamento</span>
+          </label>
+        </div>
+
+        <div class="flex items-center gap-3">
+          <input type="checkbox" name="{{ form.is_promo.html_name }}" id="{{ form.is_promo.id_for_label }}"
+                 {% if form.is_promo.value %}checked{% endif %}
+                 class="w-4 h-4 rounded border-gray-300 text-red-500 focus:ring-red-400">
+          <label for="{{ form.is_promo.id_for_label }}" class="text-sm font-medium text-gray-700 flex items-center gap-2">
+            <span class="inline-block bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold">Promoção</span>
+          </label>
+        </div>
+      </div>
+    </div>
+
+    {# Seção 4: Textos #}
+    <div class="bg-white rounded-xl border border-gray-200 shadow-sm p-6 mb-5">
+      <h2 class="text-sm font-semibold text-gray-700 uppercase tracking-wider mb-4">Textos</h2>
+
+      {# Título #}
+      <div class="mb-4">
+        <label for="{{ form.title.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+          {{ form.title.label }}
+          <span class="text-gray-400 font-normal ml-1">— texto grande</span>
+        </label>
+        <input type="text" name="{{ form.title.html_name }}" id="{{ form.title.id_for_label }}"
+               value="{{ form.title.value|default:'' }}"
+               placeholder="{{ form.title.field.widget.attrs.placeholder }}"
+               class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <p class="text-xs text-gray-400 mt-1">{{ form.title.help_text }}</p>
+        {% if form.title.errors %}
+        <p class="text-xs text-red-600 mt-1">{{ form.title.errors.0 }}</p>
+        {% endif %}
+      </div>
+
+      {# Subtítulo #}
+      <div>
+        <label for="{{ form.subtitle.id_for_label }}" class="block text-sm font-medium text-gray-700 mb-1">
+          {{ form.subtitle.label }}
+          <span class="text-gray-400 font-normal ml-1">— texto menor abaixo do título</span>
+        </label>
+        <textarea name="{{ form.subtitle.html_name }}" id="{{ form.subtitle.id_for_label }}"
+                  rows="3"
+                  placeholder="{{ form.subtitle.field.widget.attrs.placeholder }}"
+                  class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-400">{{ form.subtitle.value|default:'' }}</textarea>
+        <p class="text-xs text-gray-400 mt-1">{{ form.subtitle.help_text }}</p>
+        {% if form.subtitle.errors %}
+        <p class="text-xs text-red-600 mt-1">{{ form.subtitle.errors.0 }}</p>
+        {% endif %}
+      </div>
+    </div>
+
+    {# Ações #}
+    <div class="flex items-center justify-between">
+      <a href="{% url 'manager:carousel_list' %}"
+         class="text-sm text-gray-600 hover:text-gray-900 font-medium px-4 py-2.5 rounded-lg hover:bg-gray-100 transition-colors">
+        Cancelar
+      </a>
+      <button type="submit"
+              class="bg-amber-500 hover:bg-amber-600 text-white font-semibold text-sm px-6 py-2.5 rounded-lg transition-colors">
+        {{ submit_label }}
+      </button>
+    </div>
+
+  </form>
+</div>
+
+<script>
+  function carouselForm() {
+    return {}
+  }
+
+  function fileDropzone(name) {
+    return {
+      dragging: false,
+      fileName: null,
+      handleDrop(event, inputId) {
+        this.dragging = false
+        const file = event.dataTransfer.files[0]
+        if (!file) return
+        this.fileName = file.name
+        const input = document.getElementById(inputId)
+        const dt = new DataTransfer()
+        dt.items.add(file)
+        input.files = dt.files
+      }
+    }
+  }
+</script>
+{% endblock %}

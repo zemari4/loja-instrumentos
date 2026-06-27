@@ -1,0 +1,22 @@
+<form hx-post="{% url 'manager:update_stock' pk=instrument.pk %}"
+      hx-target="#stock-cell-{{ instrument.pk }}"
+      hx-swap="innerHTML"
+      class="flex items-center gap-1">
+  {% csrf_token %}
+  <input type="number"
+         name="stock"
+         value="{{ instrument.stock }}"
+         min="0"
+         class="w-20 text-sm border border-amber-400 rounded px-2 py-1 focus:outline-none focus:ring-2 focus:ring-amber-400">
+  <button type="submit"
+          class="px-2 py-1 bg-amber-500 hover:bg-amber-600 text-white text-xs rounded transition-colors">
+    <i class="fa-solid fa-check"></i>
+  </button>
+  <button type="button"
+          hx-get="{% url 'manager:update_stock' pk=instrument.pk %}"
+          hx-target="#stock-cell-{{ instrument.pk }}"
+          hx-swap="innerHTML"
+          class="px-2 py-1 border border-gray-200 text-gray-500 hover:bg-gray-100 text-xs rounded transition-colors">
+    <i class="fa-solid fa-xmark"></i>
+  </button>
+</form>

@@ -33,7 +33,7 @@
     </form>
     <nav class="flex items-center gap-4 text-sm text-gray-600">
       <a href="{% url 'orders:order_list' %}" class="hover:text-primary-700">Meus Pedidos</a>
-      <a href="{% url 'authentification:logout' %}" class="hover:text-primary-700">Sair</a>
+      <a href="{% url 'authentication:logout' %}" class="hover:text-primary-700">Sair</a>
       <a href="{% url 'cart:cart' %}" class="hover:text-primary-700">
         Carrinho{% if cart_count %} ({{ cart_count }}){% endif %}
       </a>

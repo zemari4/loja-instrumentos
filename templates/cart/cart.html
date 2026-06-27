@@ -35,10 +35,10 @@
     </form>
     <nav class="flex items-center gap-4 text-sm text-gray-600">
       {% if user.is_authenticated %}
-      <a href="{% url 'authentification:profile' %}" class="hover:text-primary-700">{{ user.first_name|default:user.username }}</a>
-      <a href="{% url 'authentification:logout' %}" class="hover:text-primary-700">Sair</a>
+      <a href="{% url 'authentication:profile' %}" class="hover:text-primary-700">{{ user.first_name|default:user.username }}</a>
+      <a href="{% url 'authentication:logout' %}" class="hover:text-primary-700">Sair</a>
       {% else %}
-      <a href="{% url 'authentification:login' %}" class="hover:text-primary-700">Entrar</a>
+      <a href="{% url 'authentication:login' %}" class="hover:text-primary-700">Entrar</a>
       {% endif %}
       <a href="{% url 'cart:cart' %}" class="font-semibold text-primary-700">
         Carrinho{% if cart_count %} ({{ cart_count }}){% endif %}

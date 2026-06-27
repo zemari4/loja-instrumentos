@@ -1,0 +1,63 @@
+{% extends "manager/layouts/base.html" %}
+
+{% block title %}Dashboard{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+
+{% block content %}
+
+{# KPI Cards — linha 1 (pedidos) #}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-4">
+  {% include "manager/includes/stats_card.html" with title="Total de Pedidos" value=total icon="fa-solid fa-bag-shopping" color="blue" %}
+  {% include "manager/includes/stats_card.html" with title="Pedidos Pagos" value=paid icon="fa-solid fa-circle-check" color="green" %}
+  {% include "manager/includes/stats_card.html" with title="Pedidos Cancelados" value=cancelled icon="fa-solid fa-circle-xmark" color="red" %}
+</div>
+
+{# KPI Cards — linha 2 (financeiro + estoque) #}
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+  {% include "manager/includes/stats_card.html" with title="Receita Total" value="R$ "|add:revenue|floatformat:2 icon="fa-solid fa-sack-dollar" color="amber" %}
+  {% include "manager/includes/stats_card.html" with title="Ticket Médio" value="R$ "|add:avg_ticket|floatformat:2 icon="fa-solid fa-receipt" color="purple" %}
+  {% include "manager/includes/stats_card.html" with title="Estoque Crítico" value=low_stock_count subtitle="instrumentos com menos de 5 unidades" icon="fa-solid fa-triangle-exclamation" color="yellow" %}
+</div>
+
+{# Tabelas carregadas via HTMX #}
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+
+  {# Últimos 10 pedidos #}
+  <div hx-get="{% url 'manager:recent_orders_table' %}"
+       hx-trigger="load"
+       hx-swap="outerHTML">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+      <div class="px-6 py-4 border-b h-14 bg-gray-50"></div>
+      <div class="p-6 space-y-3">
+        {% for i in "1234567" %}<div class="h-8 bg-gray-100 rounded"></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+  {# Top 5 produtos mais vendidos #}
+  <div hx-get="{% url 'manager:top_products_table' %}"
+       hx-trigger="load"
+       hx-swap="outerHTML">
+    <div class="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+      <div class="px-6 py-4 border-b h-14 bg-gray-50"></div>
+      <div class="p-6 space-y-3">
+        {% for i in "12345" %}<div class="h-8 bg-gray-100 rounded"></div>{% endfor %}
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{# Top 5 mais visualizados #}
+<div hx-get="{% url 'manager:most_viewed_table' %}"
+     hx-trigger="load"
+     hx-swap="outerHTML">
+  <div class="bg-white rounded-xl shadow-sm overflow-hidden animate-pulse">
+    <div class="px-6 py-4 border-b h-14 bg-gray-50"></div>
+    <div class="p-6 space-y-3">
+      {% for i in "12345" %}<div class="h-8 bg-gray-100 rounded"></div>{% endfor %}
+    </div>
+  </div>
+</div>
+
+{% endblock %}

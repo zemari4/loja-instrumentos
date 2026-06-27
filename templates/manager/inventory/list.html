@@ -1,0 +1,144 @@
+{% extends "manager/layouts/base.html" %}
+
+{% block title %}Estoque{% endblock %}
+{% block page_title %}Gestão de Estoque{% endblock %}
+
+{% block content %}
+
+{# Ações principais #}
+<div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+  <div class="flex flex-wrap gap-2">
+    <a href="{% url 'manager:inventory_create' %}"
+       class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+      <i class="fa-solid fa-plus"></i>Novo Produto
+    </a>
+    <a href="{% url 'manager:inventory_import' %}"
+       class="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-file-import"></i>Importar CSV/XLSX
+    </a>
+    <a href="{% url 'manager:inventory_export' %}?formato=xlsx"
+       class="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-file-export"></i>Exportar XLSX
+    </a>
+    <a href="{% url 'manager:inventory_export' %}?formato=csv"
+       class="inline-flex items-center gap-2 px-4 py-2 border border-gray-200 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-file-csv"></i>Exportar CSV
+    </a>
+  </div>
+</div>
+
+{# Filtros #}
+<div class="bg-white rounded-xl shadow-sm p-4 mb-4">
+  <form method="get" class="flex flex-wrap gap-3 items-end">
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Buscar</label>
+      <input type="text" name="q" value="{{ search }}"
+             placeholder="Nome do produto…"
+             class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400 w-48">
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Categoria</label>
+      <select name="categoria" class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <option value="">Todas</option>
+        {% for cat in categories %}
+        <option value="{{ cat.slug }}" {% if selected_category == cat.slug %}selected{% endif %}>{{ cat.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <div>
+      <label class="block text-xs font-medium text-gray-500 mb-1">Marca</label>
+      <select name="marca" class="text-sm border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-400">
+        <option value="">Todas</option>
+        {% for b in brands %}
+        <option value="{{ b.slug }}" {% if selected_brand == b.slug %}selected{% endif %}>{{ b.name }}</option>
+        {% endfor %}
+      </select>
+    </div>
+    <button type="submit" class="px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-medium rounded-lg transition-colors">
+      <i class="fa-solid fa-filter mr-1"></i>Filtrar
+    </button>
+    {% if selected_category or selected_brand or search %}
+    <a href="{% url 'manager:inventory' %}" class="px-4 py-2 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+      <i class="fa-solid fa-xmark mr-1"></i>Limpar
+    </a>
+    {% endif %}
+  </form>
+</div>
+
+{# Tabela de estoque #}
+<div class="bg-white rounded-xl shadow-sm overflow-hidden">
+  <div class="px-6 py-4 border-b flex items-center justify-between">
+    <h2 class="font-semibold text-gray-700 text-sm">
+      <i class="fa-solid fa-boxes-stacked mr-2 text-gray-400"></i>
+      Instrumentos ({{ page_obj.paginator.count }})
+    </h2>
+    <span class="inline-flex items-center gap-1 text-xs text-red-600 bg-red-50 px-2 py-1 rounded">
+      <i class="fa-solid fa-triangle-exclamation"></i>
+      Vermelho = estoque crítico (&lt; {{ low_stock_threshold }})
+    </span>
+  </div>
+
+  {% if instruments %}
+  <div class="overflow-x-auto">
+    <table class="w-full text-sm text-left">
+      <thead class="bg-gray-50 text-gray-500 uppercase text-xs">
+        <tr>
+          <th class="px-6 py-3">Instrumento</th>
+          <th class="px-6 py-3">Categoria</th>
+          <th class="px-6 py-3">Marca</th>
+          <th class="px-6 py-3">Preço</th>
+          <th class="px-6 py-3">Estoque</th>
+          <th class="px-6 py-3 text-right">Ações</th>
+        </tr>
+      </thead>
+      <tbody class="divide-y divide-gray-100">
+        {% for instrument in instruments %}
+        <tr class="hover:bg-gray-50 {% if instrument.stock < low_stock_threshold %}bg-red-50 hover:bg-red-100{% endif %}">
+          <td class="px-6 py-3 font-medium text-gray-800">
+            {% if instrument.stock < low_stock_threshold %}
+            <i class="fa-solid fa-triangle-exclamation text-red-400 mr-1 text-xs"></i>
+            {% endif %}
+            {{ instrument.name }}
+          </td>
+          <td class="px-6 py-3 text-gray-500">{{ instrument.category.name }}</td>
+          <td class="px-6 py-3 text-gray-500">{{ instrument.brand.name }}</td>
+          <td class="px-6 py-3 text-gray-700">R$ {{ instrument.price|floatformat:2 }}</td>
+          <td id="stock-cell-{{ instrument.pk }}" class="px-6 py-3">
+            {% include "manager/partials/stock_cell.html" with instrument=instrument %}
+          </td>
+          <td class="px-6 py-3">
+            <div class="flex items-center justify-end gap-1">
+              <a href="{% url 'manager:stock_adjust' instrument.pk %}"
+                 title="Ajustar estoque"
+                 class="p-1.5 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded transition-colors">
+                <i class="fa-solid fa-sliders text-xs"></i>
+              </a>
+              <a href="{% url 'manager:stock_history' instrument.pk %}"
+                 title="Histórico de movimentações"
+                 class="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors">
+                <i class="fa-solid fa-clock-rotate-left text-xs"></i>
+              </a>
+              <a href="{% url 'manager:inventory_update' instrument.pk %}"
+                 title="Editar produto"
+                 class="p-1.5 text-gray-400 hover:text-amber-600 hover:bg-amber-50 rounded transition-colors">
+                <i class="fa-solid fa-pen text-xs"></i>
+              </a>
+              <a href="{% url 'manager:inventory_delete' instrument.pk %}"
+                 title="Excluir produto"
+                 class="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded transition-colors">
+                <i class="fa-solid fa-trash text-xs"></i>
+              </a>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+  {% include "manager/includes/pagination.html" %}
+  {% else %}
+  {% include "manager/includes/empty_state.html" with message="Nenhum instrumento encontrado." icon="fa-solid fa-guitar" %}
+  {% endif %}
+</div>
+
+{% endblock %}

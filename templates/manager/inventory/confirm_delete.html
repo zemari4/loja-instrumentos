@@ -1,0 +1,39 @@
+{% extends "manager/layouts/base.html" %}
+
+{% block title %}Excluir Produto{% endblock %}
+{% block page_title %}Excluir Produto{% endblock %}
+
+{% block content %}
+<div class="max-w-lg">
+  <div class="bg-white rounded-xl shadow-sm p-6">
+    <div class="flex items-start gap-4">
+      <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center flex-shrink-0">
+        <i class="fa-solid fa-triangle-exclamation text-red-500"></i>
+      </div>
+      <div>
+        <h3 class="text-base font-semibold text-gray-800 mb-1">Confirmar exclusão</h3>
+        <p class="text-sm text-gray-600 mb-1">
+          Você está prestes a excluir permanentemente o produto:
+        </p>
+        <p class="text-sm font-semibold text-gray-800 mb-4">{{ object }}</p>
+        <p class="text-xs text-red-600 bg-red-50 px-3 py-2 rounded-lg">
+          <i class="fa-solid fa-circle-exclamation mr-1"></i>
+          Esta ação não pode ser desfeita. Todos os dados associados serão removidos.
+        </p>
+      </div>
+    </div>
+
+    <form method="post" class="mt-6 flex items-center gap-3">
+      {% csrf_token %}
+      <button type="submit"
+              class="px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors">
+        <i class="fa-solid fa-trash mr-2"></i>Sim, excluir
+      </button>
+      <a href="{% url 'manager:inventory' %}"
+         class="px-5 py-2.5 border border-gray-200 text-gray-600 text-sm font-medium rounded-lg hover:bg-gray-50 transition-colors">
+        Cancelar
+      </a>
+    </form>
+  </div>
+</div>
+{% endblock %}
