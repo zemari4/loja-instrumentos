@@ -14,11 +14,11 @@ class Migration(migrations.Migration):
         migrations.AlterField(
             model_name='historicaluserprofile',
             name='cpf',
-            field=authentification.fields.EncryptedCharField(blank=True),
+            field=authentication.fields.EncryptedCharField(blank=True),
         ),
         migrations.AlterField(
             model_name='userprofile',
             name='cpf',
-            field=authentification.fields.EncryptedCharField(blank=True),
+            field=authentication.fields.EncryptedCharField(blank=True),
         ),
     ]
