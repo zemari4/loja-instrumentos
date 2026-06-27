@@ -40,23 +40,23 @@ def order(db, staff_user, instrument):
 
 class TestDashboardView:
     def test_redirect_anonymous(self, client):
-        response = client.get(reverse("backstage:dashboard"))
+        response = client.get(reverse("manager:dashboard"))
         assert response.status_code == 302
 
     def test_redirect_non_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:dashboard"))
+        response = client.get(reverse("manager:dashboard"))
         assert response.status_code == 302
 
     def test_staff_can_access(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:dashboard"))
+        response = client.get(reverse("manager:dashboard"))
         assert response.status_code == 200
         assert "total" in response.context
 
     def test_kpi_context_keys_present(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:dashboard"))
+        response = client.get(reverse("manager:dashboard"))
         for key in ("total", "paid", "cancelled", "revenue", "avg_ticket", "low_stock_count"):
             assert key in response.context, f"Chave '{key}' ausente no contexto"
 
@@ -64,19 +64,19 @@ class TestDashboardView:
 class TestInventoryListView:
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:inventory"))
+        response = client.get(reverse("manager:inventory"))
         assert response.status_code == 302
 
     def test_staff_sees_instruments(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory"))
+        response = client.get(reverse("manager:inventory"))
         assert response.status_code == 200
         assert instrument in response.context["instruments"]
 
     def test_filter_by_category(self, client, staff_user, instrument, category):
         client.force_login(staff_user)
         response = client.get(
-            reverse("backstage:inventory"), {"categoria": category.slug}
+            reverse("manager:inventory"), {"categoria": category.slug}
         )
         assert response.status_code == 200
         assert instrument in response.context["instruments"]
@@ -88,7 +88,7 @@ class TestInventoryListView:
         )
         client.force_login(staff_user)
         response = client.get(
-            reverse("backstage:inventory"), {"categoria": other.slug}
+            reverse("manager:inventory"), {"categoria": other.slug}
         )
         assert instrument not in response.context["instruments"]
 
@@ -96,26 +96,26 @@ class TestInventoryListView:
 class TestOrderListView:
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:orders"))
+        response = client.get(reverse("manager:orders"))
         assert response.status_code == 302
 
     def test_staff_sees_orders(self, client, staff_user, order):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:orders"))
+        response = client.get(reverse("manager:orders"))
         assert response.status_code == 200
         assert order in response.context["orders"]
 
     def test_filter_by_status(self, client, staff_user, order):
         client.force_login(staff_user)
         response = client.get(
-            reverse("backstage:orders"), {"status": Order.STATUS_PENDING}
+            reverse("manager:orders"), {"status": Order.STATUS_PENDING}
         )
         assert order in response.context["orders"]
 
     def test_filter_excludes_other_status(self, client, staff_user, order):
         client.force_login(staff_user)
         response = client.get(
-            reverse("backstage:orders"), {"status": Order.STATUS_CANCELLED}
+            reverse("manager:orders"), {"status": Order.STATUS_CANCELLED}
         )
         assert order not in response.context["orders"]
 
@@ -123,13 +123,13 @@ class TestOrderListView:
 class TestOrderDetailView:
     def test_staff_sees_order_detail(self, client, staff_user, order):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:order_detail", kwargs={"pk": order.pk}))
+        response = client.get(reverse("manager:order_detail", kwargs={"pk": order.pk}))
         assert response.status_code == 200
         assert response.context["order"] == order
 
     def test_404_for_invalid_pk(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:order_detail", kwargs={"pk": 99999}))
+        response = client.get(reverse("manager:order_detail", kwargs={"pk": 99999}))
         assert response.status_code == 404
 
 
@@ -137,7 +137,7 @@ class TestUpdateOrderStatusView:
     def test_update_status(self, client, staff_user, order):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:update_order_status", kwargs={"pk": order.pk}),
+            reverse("manager:update_order_status", kwargs={"pk": order.pk}),
             {"status": Order.STATUS_PAID},
         )
         order.refresh_from_db()
@@ -148,7 +148,7 @@ class TestUpdateOrderStatusView:
         original_status = order.status
         client.force_login(staff_user)
         client.post(
-            reverse("backstage:update_order_status", kwargs={"pk": order.pk}),
+            reverse("manager:update_order_status", kwargs={"pk": order.pk}),
             {"status": "invalid_status"},
         )
         order.refresh_from_db()
@@ -158,25 +158,25 @@ class TestUpdateOrderStatusView:
 class TestAnalyticsView:
     def test_staff_can_access(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:analytics"))
+        response = client.get(reverse("manager:analytics"))
         assert response.status_code == 200
         assert "overview" in response.context
         assert "most_viewed" in response.context
 
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:analytics"))
+        response = client.get(reverse("manager:analytics"))
         assert response.status_code == 302
 
 
 class TestCustomerListView:
     def test_staff_can_access(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:customers"))
+        response = client.get(reverse("manager:customers"))
         assert response.status_code == 200
         assert "customers" in response.context
 
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:customers"))
+        response = client.get(reverse("manager:customers"))
         assert response.status_code == 302

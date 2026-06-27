@@ -24,12 +24,12 @@ class CarouselCreateView(BackstagePermissionMixin, CreateView):
     model = CarouselSlide
     form_class = CarouselSlideForm
     template_name = "manager/site_config/carousel/form.html"
-    success_url = reverse_lazy("backstage:carousel_list")
+    success_url = reverse_lazy("manager:carousel_list")
 
     def get(self, request, *args, **kwargs):
         if CarouselSlide.objects.count() >= MAX_CAROUSEL_SLIDES:
             messages.error(request, f"Limite de {MAX_CAROUSEL_SLIDES} slides atingido.")
-            return redirect("backstage:carousel_list")
+            return redirect("manager:carousel_list")
         return super().get(request, *args, **kwargs)
 
     def form_valid(self, form):
@@ -47,7 +47,7 @@ class CarouselUpdateView(BackstagePermissionMixin, UpdateView):
     model = CarouselSlide
     form_class = CarouselSlideForm
     template_name = "manager/site_config/carousel/form.html"
-    success_url = reverse_lazy("backstage:carousel_list")
+    success_url = reverse_lazy("manager:carousel_list")
 
     def form_valid(self, form):
         messages.success(self.request, "Slide atualizado com sucesso.")
@@ -63,7 +63,7 @@ class CarouselUpdateView(BackstagePermissionMixin, UpdateView):
 class CarouselDeleteView(BackstagePermissionMixin, DeleteView):
     model = CarouselSlide
     template_name = "manager/site_config/carousel/confirm_delete.html"
-    success_url = reverse_lazy("backstage:carousel_list")
+    success_url = reverse_lazy("manager:carousel_list")
 
     def form_valid(self, form):
         messages.success(self.request, "Slide removido.")

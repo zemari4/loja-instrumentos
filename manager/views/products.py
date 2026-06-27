@@ -48,7 +48,7 @@ class ProductCreateView(BackstagePermissionMixin, CreateView):
     model = Instrument
     form_class = InstrumentForm
     template_name = "manager/inventory/form.html"
-    success_url = reverse_lazy("backstage:inventory")
+    success_url = reverse_lazy("manager:inventory")
 
     def form_valid(self, form):
         messages.success(self.request, f'Produto "{form.instance.name}" criado com sucesso.')
@@ -65,7 +65,7 @@ class ProductUpdateView(BackstagePermissionMixin, UpdateView):
     model = Instrument
     form_class = InstrumentForm
     template_name = "manager/inventory/form.html"
-    success_url = reverse_lazy("backstage:inventory")
+    success_url = reverse_lazy("manager:inventory")
 
     def form_valid(self, form):
         messages.success(self.request, f'Produto "{form.instance.name}" atualizado.')
@@ -81,7 +81,7 @@ class ProductUpdateView(BackstagePermissionMixin, UpdateView):
 class ProductDeleteView(BackstagePermissionMixin, DeleteView):
     model = Instrument
     template_name = "manager/inventory/confirm_delete.html"
-    success_url = reverse_lazy("backstage:inventory")
+    success_url = reverse_lazy("manager:inventory")
 
     def form_valid(self, form):
         messages.success(self.request, f'Produto "{self.object.name}" removido.')
@@ -113,7 +113,7 @@ class StockAdjustmentView(BackstagePermissionMixin, View):
             instrument.save(update_fields=["stock", "updated_at"])
             sign = f"+{qty}" if qty >= 0 else str(qty)
             messages.success(request, f"Estoque ajustado ({sign}). Total: {new_stock} unidades.")
-            return redirect("backstage:inventory")
+            return redirect("manager:inventory")
         return render(request, self.template_name, {"instrument": instrument, "form": form})
 
 
@@ -170,7 +170,7 @@ class ProductImportView(BackstagePermissionMixin, View):
 
                 resource.import_data(dataset, dry_run=False, raise_errors=True)
                 messages.success(request, f"Importação concluída: {result.total_rows} produto(s) processado(s).")
-                return redirect("backstage:inventory")
+                return redirect("manager:inventory")
             except Exception as exc:
                 form.add_error("import_file", f"Erro ao processar arquivo: {exc}")
         return render(request, self.template_name, {"form": form})
@@ -235,7 +235,7 @@ class _ImageActionMixin:
                 "images": list(instrument.images.all()),
                 "max_images": MAX_PRODUCT_IMAGES,
             })
-        return redirect("backstage:inventory_update", pk=instrument.pk)
+        return redirect("manager:inventory_update", pk=instrument.pk)
 
     def _get_image(self, image_pk):
         """Retorna (image, None) ou (None, resposta de erro) se não encontrada."""
@@ -244,7 +244,7 @@ class _ImageActionMixin:
         except ProductImage.DoesNotExist:
             if self.request.htmx:
                 return None, HttpResponse(status=204)
-            return None, redirect("backstage:inventory_update", pk=0)
+            return None, redirect("manager:inventory_update", pk=0)
 
 
 class ProductImageUploadView(BackstagePermissionMixin, View):
@@ -269,7 +269,7 @@ class ProductImageUploadView(BackstagePermissionMixin, View):
         else:
             messages.warning(request, f"Limite de {MAX_PRODUCT_IMAGES} fotos atingido.")
 
-        return redirect("backstage:inventory_update", pk=pk)
+        return redirect("manager:inventory_update", pk=pk)
 
 
 class ProductImageDeleteView(_ImageActionMixin, BackstagePermissionMixin, View):

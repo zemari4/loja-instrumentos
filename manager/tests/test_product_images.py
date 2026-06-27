@@ -60,7 +60,7 @@ class TestProductImageUploadView:
     def test_upload_single_image_saves_and_redirects(self, client, staff_user, instrument):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": make_image()},
         )
         assert response.status_code == 302
@@ -69,15 +69,15 @@ class TestProductImageUploadView:
     def test_redirect_goes_to_product_update_page(self, client, staff_user, instrument):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": make_image()},
         )
-        assert response["Location"] == reverse("backstage:inventory_update", kwargs={"pk": instrument.pk})
+        assert response["Location"] == reverse("manager:inventory_update", kwargs={"pk": instrument.pk})
 
     def test_first_uploaded_image_becomes_main(self, client, staff_user, instrument):
         client.force_login(staff_user)
         client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": make_image()},
         )
         assert instrument.images.filter(is_main=True).count() == 1
@@ -85,7 +85,7 @@ class TestProductImageUploadView:
     def test_upload_multiple_images(self, client, staff_user, instrument):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": [make_image() for _ in range(3)]},
         )
         assert response.status_code == 302
@@ -96,7 +96,7 @@ class TestProductImageUploadView:
         for i in range(3):
             ProductImage.objects.create(instrument=instrument, image=make_image(), order=i)
         client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": [make_image() for _ in range(4)]},
         )
         assert instrument.images.count() == 5
@@ -106,7 +106,7 @@ class TestProductImageUploadView:
         for i in range(5):
             ProductImage.objects.create(instrument=instrument, image=make_image(), order=i)
         response = client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": make_image()},
         )
         assert response.status_code == 302
@@ -116,7 +116,7 @@ class TestProductImageUploadView:
         client.force_login(staff_user)
         ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=True, order=0)
         client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": make_image()},
         )
         assert instrument.images.filter(is_main=True).count() == 1
@@ -124,7 +124,7 @@ class TestProductImageUploadView:
     def test_no_files_redirects_without_saving(self, client, staff_user, instrument):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {},
         )
         assert response.status_code == 302
@@ -133,7 +133,7 @@ class TestProductImageUploadView:
     def test_requires_staff(self, client, regular_user, instrument):
         client.force_login(regular_user)
         response = client.post(
-            reverse("backstage:product_image_upload", kwargs={"pk": instrument.pk}),
+            reverse("manager:product_image_upload", kwargs={"pk": instrument.pk}),
             {"images": make_image()},
         )
         assert response.status_code == 302
@@ -148,7 +148,7 @@ class TestProductImageDeleteView:
         client.force_login(staff_user)
         pk = product_image.pk
         response = client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": pk}),
+            reverse("manager:product_image_delete", kwargs={"image_pk": pk}),
             **HTMX_HEADERS,
         )
         assert response.status_code == 200
@@ -158,7 +158,7 @@ class TestProductImageDeleteView:
         client.force_login(staff_user)
         pk = product_image.pk
         response = client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": pk})
+            reverse("manager:product_image_delete", kwargs={"image_pk": pk})
         )
         assert response.status_code == 302
         assert not ProductImage.objects.filter(pk=pk).exists()
@@ -166,7 +166,7 @@ class TestProductImageDeleteView:
     def test_missing_image_htmx_returns_204(self, client, staff_user):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": 99999}),
+            reverse("manager:product_image_delete", kwargs={"image_pk": 99999}),
             **HTMX_HEADERS,
         )
         assert response.status_code == 204
@@ -176,7 +176,7 @@ class TestProductImageDeleteView:
         main_img = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=True, order=0)
         other_img = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=False, order=1)
         client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": main_img.pk}),
+            reverse("manager:product_image_delete", kwargs={"image_pk": main_img.pk}),
             **HTMX_HEADERS,
         )
         other_img.refresh_from_db()
@@ -187,7 +187,7 @@ class TestProductImageDeleteView:
         main_img = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=True, order=0)
         other_img = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=False, order=1)
         client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": other_img.pk}),
+            reverse("manager:product_image_delete", kwargs={"image_pk": other_img.pk}),
             **HTMX_HEADERS,
         )
         main_img.refresh_from_db()
@@ -197,7 +197,7 @@ class TestProductImageDeleteView:
         client.force_login(staff_user)
         only_img = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=True, order=0)
         client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": only_img.pk}),
+            reverse("manager:product_image_delete", kwargs={"image_pk": only_img.pk}),
             **HTMX_HEADERS,
         )
         assert instrument.images.count() == 0
@@ -205,7 +205,7 @@ class TestProductImageDeleteView:
     def test_requires_staff(self, client, regular_user, product_image):
         client.force_login(regular_user)
         response = client.post(
-            reverse("backstage:product_image_delete", kwargs={"image_pk": product_image.pk}),
+            reverse("manager:product_image_delete", kwargs={"image_pk": product_image.pk}),
             **HTMX_HEADERS,
         )
         assert response.status_code == 302
@@ -218,7 +218,7 @@ class TestProductImageSetMainView:
         img1 = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=True, order=0)
         img2 = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=False, order=1)
         response = client.post(
-            reverse("backstage:product_image_set_main", kwargs={"image_pk": img2.pk}),
+            reverse("manager:product_image_set_main", kwargs={"image_pk": img2.pk}),
             **HTMX_HEADERS,
         )
         assert response.status_code == 200
@@ -231,14 +231,14 @@ class TestProductImageSetMainView:
         client.force_login(staff_user)
         img = ProductImage.objects.create(instrument=instrument, image=make_image(), is_main=False, order=0)
         response = client.post(
-            reverse("backstage:product_image_set_main", kwargs={"image_pk": img.pk})
+            reverse("manager:product_image_set_main", kwargs={"image_pk": img.pk})
         )
         assert response.status_code == 302
 
     def test_missing_image_htmx_returns_204(self, client, staff_user):
         client.force_login(staff_user)
         response = client.post(
-            reverse("backstage:product_image_set_main", kwargs={"image_pk": 99999}),
+            reverse("manager:product_image_set_main", kwargs={"image_pk": 99999}),
             **HTMX_HEADERS,
         )
         assert response.status_code == 204
@@ -250,7 +250,7 @@ class TestProductImageSetMainView:
             for i in range(3)
         ]
         client.post(
-            reverse("backstage:product_image_set_main", kwargs={"image_pk": images[2].pk}),
+            reverse("manager:product_image_set_main", kwargs={"image_pk": images[2].pk}),
             **HTMX_HEADERS,
         )
         assert instrument.images.filter(is_main=True).count() == 1
@@ -258,7 +258,7 @@ class TestProductImageSetMainView:
     def test_requires_staff(self, client, regular_user, product_image):
         client.force_login(regular_user)
         response = client.post(
-            reverse("backstage:product_image_set_main", kwargs={"image_pk": product_image.pk}),
+            reverse("manager:product_image_set_main", kwargs={"image_pk": product_image.pk}),
             **HTMX_HEADERS,
         )
         assert response.status_code == 302

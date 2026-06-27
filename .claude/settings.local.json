@@ -52,7 +52,10 @@
       "Bash(xargs sed -i \"s|\\\\\"authentification/|\\\\\"authentication/|g; s|'authentification/|'authentication/|g; s|'authentification:|'authentication:|g; s|\\\\\"authentification:|\\\\\"authentication:|g\")",
       "Bash(xargs sed -i \"s|'authentification:|'authentication:|g; s|\\\\\"authentification:|\\\\\"authentication:|g\")",
       "Bash(git -C /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos status --short)",
-      "Bash(git -C /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos add -A)"
+      "Bash(git -C /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos add -A)",
+      "Bash(git *)",
+      "Bash(gh run *)",
+      "Bash(xargs sed -i 's/\"backstage:/\"manager:/g; s/'\"'\"'backstage:/'\"'\"'manager:/g')"
     ]
   }
 }

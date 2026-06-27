@@ -54,4 +54,4 @@ class UpdateOrderStatusView(BackstagePermissionMixin, View):
             messages.success(request, "Status do pedido atualizado.")
         else:
             messages.error(request, "Status inválido.")
-        return redirect("backstage:order_detail", pk=pk)
+        return redirect("manager:order_detail", pk=pk)

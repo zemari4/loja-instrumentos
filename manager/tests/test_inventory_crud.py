@@ -54,13 +54,13 @@ def regular_user(db):
 class TestProductCreateView:
     def test_get_renders_form(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_create"))
+        response = client.get(reverse("manager:inventory_create"))
         assert response.status_code == 200
         assert "form" in response.context
 
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:inventory_create"))
+        response = client.get(reverse("manager:inventory_create"))
         assert response.status_code == 302
 
     def test_creates_instrument(self, client, staff_user, category, brand):
@@ -79,7 +79,7 @@ class TestProductCreateView:
             "is_active": "on",
             "is_featured": "",
         }
-        response = client.post(reverse("backstage:inventory_create"), data)
+        response = client.post(reverse("manager:inventory_create"), data)
         assert response.status_code == 302
         assert Instrument.objects.filter(name=name).exists()
 
@@ -97,14 +97,14 @@ class TestProductCreateView:
             "description": "",
             "is_active": "on",
         }
-        client.post(reverse("backstage:inventory_create"), data)
+        client.post(reverse("manager:inventory_create"), data)
         instrument = Instrument.objects.filter(name=name).first()
         assert instrument is not None
         assert instrument.slug != ""
 
     def test_invalid_form_rerenders(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.post(reverse("backstage:inventory_create"), {})
+        response = client.post(reverse("manager:inventory_create"), {})
         assert response.status_code == 200
         assert "form" in response.context
 
@@ -124,7 +124,7 @@ class TestProductCreateView:
             "description": "",
             "is_active": "on",
         }
-        response = client.post(reverse("backstage:inventory_create"), data)
+        response = client.post(reverse("manager:inventory_create"), data)
         assert response.status_code == 302
         inst = Instrument.objects.get(name=name)
         assert inst.price == price.quantize(Decimal("0.01"))
@@ -147,7 +147,7 @@ class TestProductCreateView:
             "description": "",
             "is_active": "on",
         }
-        client.post(reverse("backstage:inventory_create"), data)
+        client.post(reverse("manager:inventory_create"), data)
         inst = Instrument.objects.get(name=name)
         assert inst.price == expected
 
@@ -155,13 +155,13 @@ class TestProductCreateView:
 class TestProductUpdateView:
     def test_get_renders_form(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_update", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:inventory_update", kwargs={"pk": instrument.pk}))
         assert response.status_code == 200
         assert response.context["form"].instance == instrument
 
     def test_requires_staff(self, client, regular_user, instrument):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:inventory_update", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:inventory_update", kwargs={"pk": instrument.pk}))
         assert response.status_code == 302
 
     def test_updates_instrument(self, client, staff_user, instrument):
@@ -178,34 +178,34 @@ class TestProductUpdateView:
             "description": instrument.description,
             "is_active": "on",
         }
-        response = client.post(reverse("backstage:inventory_update", kwargs={"pk": instrument.pk}), data)
+        response = client.post(reverse("manager:inventory_update", kwargs={"pk": instrument.pk}), data)
         assert response.status_code == 302
         instrument.refresh_from_db()
         assert instrument.price == Decimal(str(new_price)).quantize(Decimal("0.01"))
 
     def test_404_for_unknown_pk(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_update", kwargs={"pk": 99999}))
+        response = client.get(reverse("manager:inventory_update", kwargs={"pk": 99999}))
         assert response.status_code == 404
 
 
 class TestProductDeleteView:
     def test_get_shows_confirmation(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_delete", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:inventory_delete", kwargs={"pk": instrument.pk}))
         assert response.status_code == 200
         assert response.context["object"] == instrument
 
     def test_post_deletes_instrument(self, client, staff_user, instrument):
         client.force_login(staff_user)
         pk = instrument.pk
-        response = client.post(reverse("backstage:inventory_delete", kwargs={"pk": pk}))
+        response = client.post(reverse("manager:inventory_delete", kwargs={"pk": pk}))
         assert response.status_code == 302
         assert not Instrument.objects.filter(pk=pk).exists()
 
     def test_requires_staff(self, client, regular_user, instrument):
         client.force_login(regular_user)
-        response = client.post(reverse("backstage:inventory_delete", kwargs={"pk": instrument.pk}))
+        response = client.post(reverse("manager:inventory_delete", kwargs={"pk": instrument.pk}))
         assert response.status_code == 302
         assert Instrument.objects.filter(pk=instrument.pk).exists()
 
@@ -213,7 +213,7 @@ class TestProductDeleteView:
 class TestStockAdjustmentView:
     def test_get_renders_form(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:stock_adjust", kwargs={"pk": instrument.pk}))
         assert response.status_code == 200
         assert "form" in response.context
         assert response.context["instrument"] == instrument
@@ -223,7 +223,7 @@ class TestStockAdjustmentView:
         initial = instrument.stock
         qty = fake.random_int(min=1, max=20)
         client.post(
-            reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}),
+            reverse("manager:stock_adjust", kwargs={"pk": instrument.pk}),
             {"quantity_change": qty, "movement_type": StockMovement.Type.RESTOCK, "notes": ""},
         )
         instrument.refresh_from_db()
@@ -236,7 +236,7 @@ class TestStockAdjustmentView:
         instrument.save()
         qty = fake.random_int(min=1, max=5)
         client.post(
-            reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}),
+            reverse("manager:stock_adjust", kwargs={"pk": instrument.pk}),
             {"quantity_change": -qty, "movement_type": StockMovement.Type.SALE, "notes": ""},
         )
         instrument.refresh_from_db()
@@ -247,7 +247,7 @@ class TestStockAdjustmentView:
         instrument.stock = fake.random_int(min=1, max=5)
         instrument.save()
         client.post(
-            reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}),
+            reverse("manager:stock_adjust", kwargs={"pk": instrument.pk}),
             {"quantity_change": -99999, "movement_type": StockMovement.Type.SALE, "notes": ""},
         )
         instrument.refresh_from_db()
@@ -259,7 +259,7 @@ class TestStockAdjustmentView:
         note = fake.sentence()
         qty = fake.random_int(min=1, max=20)
         client.post(
-            reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}),
+            reverse("manager:stock_adjust", kwargs={"pk": instrument.pk}),
             {"quantity_change": qty, "movement_type": StockMovement.Type.RESTOCK, "notes": note},
         )
         assert StockMovement.objects.filter(instrument=instrument).count() == before + 1
@@ -269,7 +269,7 @@ class TestStockAdjustmentView:
 
     def test_requires_staff(self, client, regular_user, instrument):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:stock_adjust", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:stock_adjust", kwargs={"pk": instrument.pk}))
         assert response.status_code == 302
 
 
@@ -282,47 +282,47 @@ class TestStockHistoryView:
             movement_type=StockMovement.Type.RESTOCK,
             created_by=staff_user,
         )
-        response = client.get(reverse("backstage:stock_history", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:stock_history", kwargs={"pk": instrument.pk}))
         assert response.status_code == 200
         assert "movements" in response.context
         assert response.context["instrument"] == instrument
 
     def test_empty_history(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:stock_history", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:stock_history", kwargs={"pk": instrument.pk}))
         assert response.status_code == 200
         assert list(response.context["movements"]) == []
 
     def test_requires_staff(self, client, regular_user, instrument):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:stock_history", kwargs={"pk": instrument.pk}))
+        response = client.get(reverse("manager:stock_history", kwargs={"pk": instrument.pk}))
         assert response.status_code == 302
 
 
 class TestProductExportView:
     def test_export_xlsx(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_export") + "?formato=xlsx")
+        response = client.get(reverse("manager:inventory_export") + "?formato=xlsx")
         assert response.status_code == 200
         assert "spreadsheetml" in response["Content-Type"]
         assert response["Content-Disposition"].endswith('"produtos.xlsx"')
 
     def test_export_csv(self, client, staff_user, instrument):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_export") + "?formato=csv")
+        response = client.get(reverse("manager:inventory_export") + "?formato=csv")
         assert response.status_code == 200
         assert "text/csv" in response["Content-Type"]
 
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:inventory_export"))
+        response = client.get(reverse("manager:inventory_export"))
         assert response.status_code == 302
 
 
 class TestProductImportView:
     def test_get_renders_form(self, client, staff_user):
         client.force_login(staff_user)
-        response = client.get(reverse("backstage:inventory_import"))
+        response = client.get(reverse("manager:inventory_import"))
         assert response.status_code == 200
         assert "form" in response.context
 
@@ -339,7 +339,7 @@ class TestProductImportView:
         csv_file = io.BytesIO(csv_content.encode("utf-8"))
         csv_file.name = "produtos.csv"
         response = client.post(
-            reverse("backstage:inventory_import"),
+            reverse("manager:inventory_import"),
             {"import_file": csv_file},
         )
         assert response.status_code == 302
@@ -349,7 +349,7 @@ class TestProductImportView:
         txt_file = io.BytesIO(b"invalid")
         txt_file.name = "arquivo.txt"
         response = client.post(
-            reverse("backstage:inventory_import"),
+            reverse("manager:inventory_import"),
             {"import_file": txt_file},
         )
         assert response.status_code == 200
@@ -365,7 +365,7 @@ class TestProductImportView:
         )
         csv_file = io.BytesIO(csv_content.encode("utf-8"))
         csv_file.name = "produtos.csv"
-        client.post(reverse("backstage:inventory_import"), {"import_file": csv_file})
+        client.post(reverse("manager:inventory_import"), {"import_file": csv_file})
         assert Brand.objects.filter(name=new_brand_name).exists()
 
     def test_import_creates_missing_category(self, client, staff_user, brand):
@@ -378,10 +378,10 @@ class TestProductImportView:
         )
         csv_file = io.BytesIO(csv_content.encode("utf-8"))
         csv_file.name = "produtos.csv"
-        client.post(reverse("backstage:inventory_import"), {"import_file": csv_file})
+        client.post(reverse("manager:inventory_import"), {"import_file": csv_file})
         assert Category.objects.filter(name=new_cat_name).exists()
 
     def test_requires_staff(self, client, regular_user):
         client.force_login(regular_user)
-        response = client.get(reverse("backstage:inventory_import"))
+        response = client.get(reverse("manager:inventory_import"))
         assert response.status_code == 302
