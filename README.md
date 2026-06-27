@@ -53,7 +53,7 @@ Administradores têm acesso a um painel para gerenciar produtos, estoque, pedido
 
 ```
 musicmais/
-├── authentification/   # Login, cadastro e conta do usuário
+├── authentication/   # Login, cadastro e conta do usuário
 ├── catalog/            # Catálogo de produtos
 ├── cart/               # Carrinho de compras
 ├── orders/             # Pedidos e histórico de compras

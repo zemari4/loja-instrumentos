@@ -38,7 +38,7 @@ def regular_user(db):
 class TestBackstagePermissionMixin:
     def test_anonymous_user_is_redirected(self, db):
         factory = RequestFactory()
-        request = factory.get("/backstage/")
+        request = factory.get("/manager/")
         request.user = AnonymousUser()
 
         view = _StaffRequiredView.as_view()
@@ -49,7 +49,7 @@ class TestBackstagePermissionMixin:
 
     def test_non_staff_user_is_redirected(self, regular_user):
         factory = RequestFactory()
-        request = factory.get("/backstage/")
+        request = factory.get("/manager/")
         request.user = regular_user
 
         view = _StaffRequiredView.as_view()
@@ -61,7 +61,7 @@ class TestBackstagePermissionMixin:
         from django.contrib.messages.storage.fallback import FallbackStorage
         from django.contrib.sessions.backends.db import SessionStore
 
-        request = rf.get("/backstage/")
+        request = rf.get("/manager/")
         request.user = staff_user
         request.session = SessionStore()
         request._messages = FallbackStorage(request)

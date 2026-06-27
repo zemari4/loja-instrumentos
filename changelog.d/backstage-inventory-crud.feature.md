@@ -1,1 +1,1 @@
-Adiciona CRUD completo de produtos no backstage com controle de estoque, histórico de movimentações e importação/exportação via CSV e Excel.
+Adiciona CRUD completo de produtos no manager com controle de estoque, histórico de movimentações e importação/exportação via CSV e Excel.

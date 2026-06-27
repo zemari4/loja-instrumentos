@@ -55,7 +55,12 @@
       "Bash(git -C /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos add -A)",
       "Bash(git *)",
       "Bash(gh run *)",
-      "Bash(xargs sed -i 's/\"backstage:/\"manager:/g; s/'\"'\"'backstage:/'\"'\"'manager:/g')"
+      "Bash(xargs sed -i 's/\"backstage:/\"manager:/g; s/'\"'\"'backstage:/'\"'\"'manager:/g')",
+      "Bash(sed -i 's|\"/backstage/\"|\"/manager/\"|g' /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/manager/tests/test_mixins.py)",
+      "Bash(sed -i 's|\"Disallow: /backstage/\"|\"Disallow: /manager/\"|g' /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/home/views.py)",
+      "Bash(sed -i 's|authentification/|authentication/|g' /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/README.md)",
+      "Bash(sed -i 's|backstage|manager|g; s|/backstage/|/manager/|g' /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/docs/backstage-imagens-produto.md)",
+      "Bash(sed -i 's|backstage|manager|g' /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/changelog.d/backstage-upload-imagens-produto.feature.md /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/changelog.d/backstage-dashboard.feature.md /home/jmdmn/documents/projetos/ecommerce/loja-instrumentos/changelog.d/backstage-inventory-crud.feature.md)"
     ]
   }
 }

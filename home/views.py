@@ -22,7 +22,7 @@ class RobotsTxtView(View):
         lines = [
             "User-agent: *",
             "Disallow: /admin/",
-            "Disallow: /backstage/",
+            "Disallow: /manager/",
             "Disallow: /api/",
             f"Sitemap: {request.build_absolute_uri('/sitemap.xml')}",
         ]

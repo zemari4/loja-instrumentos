@@ -3,7 +3,7 @@
 
 ## Visão geral
 
-O backstage permite gerenciar até **5 fotos por produto** diretamente na página de edição do produto (`/backstage/estoque/<pk>/produto/`). As imagens são armazenadas em `media/products/` e servidas via `MEDIA_URL`.
+O manager permite gerenciar até **5 fotos por produto** diretamente na página de edição do produto (`/manager/estoque/<pk>/produto/`). As imagens são armazenadas em `media/products/` e servidas via `MEDIA_URL`.
 
 ---
 
@@ -27,7 +27,7 @@ A property `Instrument.main_image` retorna o `ImageFieldFile` da imagem marcada 
 
 ## URLs e views
 
-Todas as rotas ficam no namespace `backstage` (prefixo `/backstage/`).
+Todas as rotas ficam no namespace `manager` (prefixo `/manager/`).
 
 | URL | View | Descrição |
 |-----|------|-----------|
@@ -39,8 +39,8 @@ Todas as rotas ficam no namespace `backstage` (prefixo `/backstage/`).
 
 Todas as três views detectam se a requisição veio do HTMX via `request.htmx` (middleware `django_htmx`):
 
-- **HTMX**: retorna o partial `backstage/partials/product_images.html` para atualização parcial da seção (`outerHTML` swap em `#product-images-section`)
-- **POST nativo**: redireciona para `backstage:inventory_update` com mensagem de sucesso via Django messages
+- **HTMX**: retorna o partial `manager/partials/product_images.html` para atualização parcial da seção (`outerHTML` swap em `#product-images-section`)
+- **POST nativo**: redireciona para `manager:inventory_update` com mensagem de sucesso via Django messages
 
 ---
 
@@ -54,7 +54,7 @@ Todas as três views detectam se a requisição veio do HTMX via `request.htmx` 
 ### Constante relevante
 
 ```python
-# backstage/views/products.py
+# manager/views/products.py
 MAX_PRODUCT_IMAGES = 5
 ```
 
@@ -70,7 +70,7 @@ MAX_PRODUCT_IMAGES = 5
 
 ## Template
 
-O partial `templates/backstage/partials/product_images.html` é incluído em `form.html` **fora** do `<form>` principal do produto para evitar nesting de forms HTML.
+O partial `templates/manager/partials/product_images.html` é incluído em `form.html` **fora** do `<form>` principal do produto para evitar nesting de forms HTML.
 
 Interatividade:
 - **Drag-and-drop e preview**: Alpine.js (`x-data`, `@drop`, `@change`)
@@ -81,7 +81,7 @@ Interatividade:
 
 ## Formato de preço (BRDecimalField)
 
-O campo de preço usa `BRDecimalField` (em `backstage/forms.py`), que sobrescreve `to_python()` para aceitar o formato brasileiro:
+O campo de preço usa `BRDecimalField` (em `manager/forms.py`), que sobrescreve `to_python()` para aceitar o formato brasileiro:
 
 | Entrada | Interpretação |
 |---------|---------------|
