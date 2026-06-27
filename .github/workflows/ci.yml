@@ -33,4 +33,4 @@ jobs:
         run: pip install -r requirements-dev.txt
 
       - name: Run tests
-        run: pytest authentification/tests/ catalog/tests/ cart/tests/ home/tests/ --tb=short -q
+        run: pytest authentication/tests/ catalog/tests/ cart/tests/ home/tests/ --tb=short -q
