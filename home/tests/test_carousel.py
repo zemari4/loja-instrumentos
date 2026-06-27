@@ -101,21 +101,21 @@ class TestHomeViewCarousel:
 @pytest.mark.django_db
 class TestCarouselBackstageViews:
     def test_list_requires_staff(self, client):
-        response = client.get("/backstage/site/carrossel/")
+        response = client.get("/manager/site/carrossel/")
         assert response.status_code == 302
 
     def test_list_accessible_by_staff(self, staff_client):
-        response = staff_client.get("/backstage/site/carrossel/")
+        response = staff_client.get("/manager/site/carrossel/")
         assert response.status_code == 200
 
     def test_list_shows_slides(self, staff_client):
         title = fake.sentence(nb_words=3)
         make_slide(order=1, title=title)
-        response = staff_client.get("/backstage/site/carrossel/")
+        response = staff_client.get("/manager/site/carrossel/")
         assert title in response.content.decode()
 
     def test_create_slide(self, staff_client):
-        response = staff_client.post("/backstage/site/carrossel/novo/", {
+        response = staff_client.post("/manager/site/carrossel/novo/", {
             "order": 1,
             "is_active": True,
             "is_launch": False,
@@ -130,13 +130,13 @@ class TestCarouselBackstageViews:
     def test_cannot_exceed_max_slides(self, staff_client):
         for i in range(1, MAX_CAROUSEL_SLIDES + 1):
             make_slide(order=i)
-        response = staff_client.get("/backstage/site/carrossel/novo/")
+        response = staff_client.get("/manager/site/carrossel/novo/")
         assert response.status_code == 302
 
     def test_update_slide(self, staff_client):
         slide = make_slide(order=1, title=fake.sentence())
         new_title = fake.sentence(nb_words=5)
-        staff_client.post(f"/backstage/site/carrossel/{slide.pk}/editar/", {
+        staff_client.post(f"/manager/site/carrossel/{slide.pk}/editar/", {
             "order": 1,
             "is_active": True,
             "is_launch": False,
@@ -151,5 +151,5 @@ class TestCarouselBackstageViews:
 
     def test_delete_slide(self, staff_client):
         slide = make_slide(order=1)
-        staff_client.post(f"/backstage/site/carrossel/{slide.pk}/excluir/")
+        staff_client.post(f"/manager/site/carrossel/{slide.pk}/excluir/")
         assert CarouselSlide.objects.count() == 0
