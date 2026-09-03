@@ -4,6 +4,7 @@ Simples, sem infraestrutura de produção (sem Celery, Redis, S3, Sentry).
 """
 import logging
 import os
+import shutil
 import tomllib
 import warnings
 from pathlib import Path
@@ -26,7 +27,6 @@ env = environ.Env(
     EMAIL_HOST_PASSWORD=(str, None),
     GA_ID=(str, None),
     GTM_ID=(str, None),
-    ANTHROPIC_API_KEY=(str, None),
     FIELD_ENCRYPTION_KEY=(str, None),
 )
 
@@ -324,7 +324,10 @@ DEFAULT_FROM_EMAIL = EMAIL_HOST_USER or "musicmais@localhost"
 # ── TAILWIND ──────────────────────────────────────────────────────────────────
 
 TAILWIND_APP_NAME = "musicmaisCSS"
-NPM_BIN_PATH = r"C:\Program Files\nodejs\npm.cmd" if os.name == "nt" else "/usr/bin/npm"
+NPM_BIN_PATH = (
+    r"C:\Program Files\nodejs\npm.cmd" if os.name == "nt"
+    else shutil.which("npm") or "/usr/bin/npm"
+)
 
 # ── I18N / TZ ─────────────────────────────────────────────────────────────────
 
@@ -337,7 +340,5 @@ USE_TZ = True
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 X_FRAME_OPTIONS = "SAMEORIGIN"
-
-ANTHROPIC_API_KEY = env("ANTHROPIC_API_KEY", default=None)
 
 warnings.filterwarnings("ignore", message="Invalid line.*")
