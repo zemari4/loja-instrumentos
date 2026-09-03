@@ -3,6 +3,7 @@ import re
 from django import forms
 from django.contrib.auth import authenticate
 from django.contrib.auth.models import User
+from django.contrib.auth.password_validation import validate_password
 
 from .models import UserProfile
 
@@ -76,6 +77,20 @@ class RegisterForm(forms.ModelForm):
         p1, p2 = cd.get("password1"), cd.get("password2")
         if p1 and p2 and p1 != p2:
             self.add_error("password2", "As senhas não coincidem.")
+        elif p1:
+            # Neste ponto self.instance ainda não tem username/email — um ModelForm
+            # só os preenche em _post_clean(), que roda depois do clean(). Sem um
+            # usuário preenchido, o validador de similaridade não teria o que comparar.
+            candidato = User(
+                username=cd.get("username") or "",
+                email=cd.get("email") or "",
+                first_name=cd.get("first_name") or "",
+                last_name=cd.get("last_name") or "",
+            )
+            try:
+                validate_password(p1, candidato)
+            except forms.ValidationError as exc:
+                self.add_error("password1", exc)
         return cd
 
     def save(self, commit=True):
