@@ -1,24 +1,34 @@
+import io
+
 import pytest
 from django.contrib.auth.models import User
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
 from faker import Faker
+from PIL import Image
 
 from catalog.models import Instrument, ProductImage
 
 fake = Faker("pt_BR")
 
-TINY_PNG = (
-    b"\x89PNG\r\n\x1a\n\x00\x00\x00\rIHDR\x00\x00\x00\x01\x00\x00\x00\x01"
-    b"\x08\x02\x00\x00\x00\x90wS\xde\x00\x00\x00\x0cIDATx\x9cc\xf8\x0f\x00"
-    b"\x00\x01\x01\x00\x05\x18\xd8N\x00\x00\x00\x00IEND\xaeB`\x82"
-)
+
+def png_bytes(tamanho=(1, 1)):
+    """Gera um PNG real.
+
+    O fixture anterior era uma sequência de bytes fixa com CRC inválido no chunk
+    IDAT — o Pillow a rejeita. Nunca foi notado porque a view criava ProductImage
+    com objects.create(), que não valida nada. Com a validação no servidor
+    (issue #16), o fixture precisa ser uma imagem de verdade.
+    """
+    buffer = io.BytesIO()
+    Image.new("RGB", tamanho, "red").save(buffer, format="PNG")
+    return buffer.getvalue()
 
 
-def make_image():
+def make_image(nome=None):
     return SimpleUploadedFile(
-        f"{fake.slug()}.png",
-        TINY_PNG,
+        nome or f"{fake.slug()}.png",
+        png_bytes(),
         content_type="image/png",
     )
 
@@ -262,3 +272,108 @@ class TestProductImageSetMainView:
             **HTMX_HEADERS,
         )
         assert response.status_code == 302
+
+
+class TestProductImageValidacaoServidor:
+    """Cobre a validação de upload no servidor (issue #16).
+
+    A view criava ProductImage com objects.create(), que não chama full_clean():
+    nada era validado no servidor. A filtragem por tipo existia apenas no
+    componente Alpine do template, que qualquer cliente HTTP ignora.
+    """
+
+    def _form(self, nome, conteudo, content_type="image/png"):
+        from manager.forms import ProductImageForm
+
+        arquivo = SimpleUploadedFile(nome, conteudo, content_type=content_type)
+        return ProductImageForm(files={"image": arquivo})
+
+    def test_aceita_png_valido(self):
+        assert self._form("foto.png", png_bytes()).is_valid()
+
+    @pytest.mark.parametrize("extensao", ["jpg", "webp"])
+    def test_aceita_demais_formatos_web(self, extensao):
+        import io
+
+        buffer = io.BytesIO()
+        formato = "JPEG" if extensao == "jpg" else "WEBP"
+        Image.new("RGB", (2, 2), "red").save(buffer, format=formato)
+        assert self._form(f"foto.{extensao}", buffer.getvalue()).is_valid()
+
+    def test_rejeita_svg_com_script(self):
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        assert not self._form("x.svg", svg, "image/svg+xml").is_valid()
+
+    def test_rejeita_svg_renomeado_para_png(self):
+        """Renomear não engana: quem valida é o Pillow, não a extensão."""
+        svg = b'<svg xmlns="http://www.w3.org/2000/svg"><script>alert(1)</script></svg>'
+        assert not self._form("disfarce.png", svg).is_valid()
+
+    def test_rejeita_html_renomeado_para_png(self):
+        assert not self._form("e.png", b"<html><script>alert(1)</script></html>").is_valid()
+
+    def test_rejeita_content_type_mentiroso_mas_aceita_bytes_validos(self):
+        """content-type vem do cliente e não é confiável em nenhuma direção:
+        o que decide é o conteúdo real do arquivo."""
+        assert self._form("ok.png", png_bytes(), content_type="text/html").is_valid()
+
+    @pytest.mark.parametrize("extensao", ["bmp", "tiff"])
+    def test_rejeita_formato_de_imagem_fora_da_whitelist(self, extensao):
+        """São imagens válidas para o Pillow, mas não são formatos web."""
+        import io
+
+        buffer = io.BytesIO()
+        Image.new("RGB", (2, 2), "red").save(buffer, format=extensao.upper())
+        form = self._form(f"f.{extensao}", buffer.getvalue())
+        assert not form.is_valid()
+        assert "não aceita" in str(form.errors["image"])
+
+    def test_rejeita_arquivo_acima_do_limite(self):
+        from manager.forms import ProductImageForm
+
+        excedente = b"\x00" * (ProductImageForm.MAX_UPLOAD_SIZE + 1)
+        form = self._form("g.png", png_bytes() + excedente)
+        assert not form.is_valid()
+        assert "excede o limite" in str(form.errors["image"])
+
+    def test_limite_de_tamanho_e_configuravel(self):
+        from manager.forms import ProductImageForm
+
+        assert isinstance(ProductImageForm.MAX_UPLOAD_SIZE, int)
+        assert ProductImageForm.EXTENSOES_ACEITAS == {"jpg", "jpeg", "png", "webp"}
+
+
+@pytest.mark.django_db
+class TestUploadViewRejeitaArquivoInvalido:
+    """A validação precisa valer no endpoint, não só no form isolado."""
+
+    def _post(self, client, instrument, arquivos):
+        return client.post(
+            reverse("manager:product_image_upload", args=[instrument.pk]),
+            {"images": arquivos},
+            follow=True,
+        )
+
+    def test_arquivo_nao_imagem_nao_cria_registro(self, client, staff_user, instrument):
+        client.force_login(staff_user)
+        malicioso = SimpleUploadedFile(
+            "payload.png", b"<html><script>alert(1)</script></html>", content_type="image/png"
+        )
+        self._post(client, instrument, [malicioso])
+        assert instrument.images.count() == 0
+
+    def test_arquivo_valido_no_meio_de_invalidos_e_salvo(self, client, staff_user, instrument):
+        client.force_login(staff_user)
+        arquivos = [
+            SimpleUploadedFile("ruim.png", b"nao sou imagem", content_type="image/png"),
+            make_image("boa.png"),
+        ]
+        self._post(client, instrument, arquivos)
+        assert instrument.images.count() == 1
+
+    def test_usuario_ve_o_motivo_da_rejeicao(self, client, staff_user, instrument):
+        client.force_login(staff_user)
+        ruim = SimpleUploadedFile("ruim.png", b"nao sou imagem", content_type="image/png")
+        resposta = self._post(client, instrument, [ruim])
+        mensagens = [m.message for m in resposta.context["messages"]]
+        assert any("ruim.png" in m for m in mensagens)
