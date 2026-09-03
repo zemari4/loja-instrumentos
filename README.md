@@ -26,8 +26,7 @@ Administradores têm acesso a um painel para gerenciar produtos, estoque, pedido
 |---|---|
 | **Python** | Linguagem de programação principal do projeto |
 | **Django** | Framework web que cuida das rotas, banco de dados, autenticação e toda a lógica do servidor |
-| **Celery** | Executa tarefas em segundo plano (ex: envio de e-mails, notificações) sem travar o site |
-| **Redis** | Banco de dados em memória usado como fila de tarefas para o Celery e cache de dados frequentes |
+| **SQLite** | Banco de dados padrão do projeto local (basta um arquivo, sem servidor para instalar) |
 
 ### Frontend (interface visual)
 
@@ -52,14 +51,21 @@ Administradores têm acesso a um painel para gerenciar produtos, estoque, pedido
 ## Estrutura do projeto
 
 ```
-musicmais/
-├── authentication/   # Login, cadastro e conta do usuário
+loja-instrumentos/
+├── backend/            # Configuração do Django (settings, urls, wsgi)
+├── home/               # Página inicial e carrossel
+├── authentication/     # Login, cadastro e conta do usuário
 ├── catalog/            # Catálogo de produtos
 ├── cart/               # Carrinho de compras
 ├── orders/             # Pedidos e histórico de compras
-├── analytics/          # Métricas e dados da loja
-├── home/               # Página inicial
+├── manager/            # Painel administrativo da loja (rota /manager/)
+├── dashboard/          # Serviços de métricas, estoque e pedidos do painel
+├── analytics/          # Middleware de contexto de log e métricas
+├── musicmaisCSS/       # App do Tailwind (fonte em static_src, CSS compilado)
+├── theme/              # App de tema (scaffolding do django-tailwind)
 ├── templates/          # Templates HTML de todas as páginas
+├── static/             # Imagens e assets estáticos
+├── changelog.d/        # Fragmentos de changelog (towncrier)
 └── docs/               # Documentação técnica das funcionalidades
 ```
 
@@ -69,16 +75,15 @@ musicmais/
 
 ### Pré-requisitos
 
-- Python 3.11+
-- Redis instalado e rodando
-- Node.js (para compilar o CSS)
+- Python 3.12+ (exigido pelo `pyproject.toml` e pelo Django 6)
+- Node.js — apenas se for recompilar o CSS; o projeto já vem com o CSS buildado
 
 ### Passos
 
 ```bash
 # 1. Clone o repositório
 git clone <url-do-repositorio>
-cd musicmais
+cd loja-instrumentos
 
 # 2. Crie e ative o ambiente virtual
 python -m venv .venv
@@ -86,29 +91,29 @@ source .venv/bin/activate        # Linux/Mac
 .venv\Scripts\activate           # Windows
 
 # 3. Instale as dependências Python
-pip install -r requirements.txt
+# Use o requirements-dev.txt: o settings_dev importa debug_toolbar
+# e django_browser_reload, que não estão no requirements.txt.
+pip install -r requirements-dev.txt
 
 # 4. Configure as variáveis de ambiente
 cp .env.example .env
-# Edite o .env com suas configurações locais
+# Deixe DATABASE_URL vazio para usar SQLite. O valor de exemplo aponta
+# para um Postgres que não existe localmente e impede o servidor de subir.
 
 # 5. Rode as migrações do banco de dados
 python manage.py migrate
 
-# 6. Inicie o servidor
+# 6. Crie um usuário administrador (para acessar /admin/)
+python manage.py createsuperuser
+
+# 7. Inicie o servidor
 python manage.py runserver
 ```
 
 Em outro terminal, para compilar o CSS automaticamente:
 
 ```bash
-cd theme/static_src && npm install && npm run watch
-```
-
-Para processar tarefas em segundo plano (opcional):
-
-```bash
-celery -A musicmais worker -l info -E
+cd musicmaisCSS/static_src && npm install && npm run dev
 ```
 
 ---
