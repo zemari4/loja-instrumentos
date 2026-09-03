@@ -32,5 +32,9 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      # Executa a suíte inteira. Não liste diretórios aqui: apps omitidos deixam
+      # de ser verificados sem que nada falhe — foi assim que manager/ e orders/,
+      # que cobrem controle de acesso e checkout, ficaram fora do CI.
+      # DJANGO_SETTINGS_MODULE vem de [tool.pytest.ini_options] no pyproject.toml.
       - name: Run tests
-        run: pytest authentication/tests/ catalog/tests/ cart/tests/ home/tests/ --tb=short -q
+        run: pytest
