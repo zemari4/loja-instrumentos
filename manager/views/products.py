@@ -6,7 +6,7 @@ from django.urls import reverse_lazy
 from django.views import View
 from django.views.generic import CreateView, DeleteView, ListView, UpdateView
 
-from manager.forms import InstrumentForm, ProductImportForm, StockAdjustmentForm
+from manager.forms import InstrumentForm, ProductImageForm, ProductImportForm, StockAdjustmentForm
 from manager.mixins import BackstagePermissionMixin
 from catalog.models import Brand, Category, Instrument, ProductImage, StockMovement
 from catalog.resources import InstrumentResource
@@ -255,15 +255,28 @@ class ProductImageUploadView(BackstagePermissionMixin, View):
         slots = MAX_PRODUCT_IMAGES - existing
 
         if files and slots > 0:
-            count = min(len(files), slots)
-            for i, f in enumerate(files[:slots]):
+            # Cada arquivo passa pelo ProductImageForm: objects.create() não chama
+            # full_clean(), então sem o form nada aqui seria validado no servidor.
+            aceitas, rejeitadas = [], []
+            for f in files[:slots]:
+                form = ProductImageForm(files={"image": f})
+                if form.is_valid():
+                    aceitas.append(form.cleaned_data["image"])
+                else:
+                    rejeitadas.append(f"{f.name}: {form.errors['image'][0]}")
+
+            for i, imagem in enumerate(aceitas):
                 ProductImage.objects.create(
                     instrument=instrument,
-                    image=f,
+                    image=imagem,
                     is_main=(existing == 0 and i == 0),
                     order=existing + i,
                 )
-            messages.success(request, f"{count} foto(s) adicionada(s) com sucesso.")
+
+            if aceitas:
+                messages.success(request, f"{len(aceitas)} foto(s) adicionada(s) com sucesso.")
+            for erro in rejeitadas:
+                messages.error(request, erro)
         elif not files:
             messages.error(request, "Nenhuma imagem selecionada.")
         else:
