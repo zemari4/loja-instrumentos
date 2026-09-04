@@ -28,12 +28,17 @@ class LoginForm(forms.Form):
         username = cd.get("username", "").strip()
         password = cd.get("password", "")
         if username and password:
-            # suporte a login por e-mail
+            # suporte a login por e-mail.
+            # User.email não é único no modelo padrão do Django, e nem o admin nem
+            # o fluxo social do allauth passam pela validação do RegisterForm. Um
+            # .get() aqui levantaria MultipleObjectsReturned — não tratado, virava
+            # HTTP 500 e travava o login dos dois usuários envolvidos.
             if "@" in username:
-                try:
-                    username = User.objects.get(email__iexact=username).username
-                except User.DoesNotExist:
-                    pass
+                correspondente = (
+                    User.objects.filter(email__iexact=username).order_by("pk").first()
+                )
+                if correspondente:
+                    username = correspondente.username
             user = authenticate(self.request, username=username, password=password)
             if user is None:
                 raise forms.ValidationError("Usuário ou senha inválidos.")
@@ -67,13 +72,22 @@ class RegisterForm(forms.ModelForm):
         }
 
     def clean_email(self):
-        email = self.cleaned_data["email"]
-        if User.objects.filter(email__iexact=email).exists():
-            raise forms.ValidationError("Este e-mail já está cadastrado.")
-        return email.lower()
+        return self.cleaned_data["email"].lower()
 
     def clean(self):
         cd = super().clean()
+
+        # A checagem de e-mail duplicado fica aqui, e não em clean_email, para que
+        # o erro seja não-field. Preso ao campo, o próprio destaque do e-mail já
+        # confirmaria que o endereço existe na base, por mais genérico que fosse
+        # o texto. A mensagem também não diz qual dado está em conflito.
+        email = cd.get("email")
+        if email and User.objects.filter(email__iexact=email).exists():
+            self.add_error(
+                None,
+                "Não foi possível concluir o cadastro. Verifique os dados informados.",
+            )
+
         p1, p2 = cd.get("password1"), cd.get("password2")
         if p1 and p2 and p1 != p2:
             self.add_error("password2", "As senhas não coincidem.")
