@@ -5,7 +5,8 @@ from django_ratelimit.decorators import ratelimit
 from django.utils.decorators import method_decorator
 from django.utils.http import url_has_allowed_host_and_scheme
 from django.shortcuts import redirect
-from django.views.generic import FormView, TemplateView, UpdateView
+from django.views import View
+from django.views.generic import FormView
 
 from .forms import LoginForm, ProfileForm, RegisterForm
 from .models import LoginHistory
@@ -94,8 +95,18 @@ class ProfileView(LoginRequiredMixin, FormView):
         return redirect("/usuario/perfil")
 
 
-class LogoutView(TemplateView):
-    def get(self, request, *args, **kwargs):
+class LogoutView(View):
+    """Encerra a sessão. Aceita apenas POST.
+
+    Por GET, um terceiro derruba a sessão do usuário sem nenhuma interação —
+    basta uma tag de imagem apontando para a rota numa página qualquer. O Django
+    5 passou a exigir POST no LogoutView nativo pelo mesmo motivo.
+
+    Um GET aqui recebe 405; os templates usam o form em
+    authentication/_logout_button.html.
+    """
+
+    def post(self, request, *args, **kwargs):
         logout(request)
         messages.info(request, "Você saiu da sua conta.")
         return redirect("/")

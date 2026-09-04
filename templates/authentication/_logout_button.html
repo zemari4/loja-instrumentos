@@ -1,0 +1,19 @@
+{% comment %}
+Botão de logout. Precisa ser POST: por GET, qualquer terceiro encerra a sessão
+do usuário com uma tag de imagem apontando para a rota. O Django 5 passou a
+exigir POST no LogoutView nativo pelo mesmo motivo.
+
+Uso:
+  {% include "authentication/_logout_button.html" %}
+  {% include "authentication/_logout_button.html" with classe="hover:text-primary-600" %}
+  {% include "authentication/_logout_button.html" with classe="..." rotulo_html=1 %}
+
+Com rotulo_html, o conteúdo do botão vem do bloco {% block %} de quem inclui —
+para esses casos, use o form diretamente em vez do include.
+{% endcomment %}
+<form method="post" action="{% url 'authentication:logout' %}" class="inline">
+  {% csrf_token %}
+  <button type="submit" class="{{ classe|default:'hover:text-primary-700' }}">
+    {{ rotulo|default:'Sair' }}
+  </button>
+</form>
