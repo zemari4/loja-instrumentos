@@ -77,12 +77,59 @@ class TestProfileView:
 class TestLogoutView:
     def test_logout_redirects(self, client, user):
         client.force_login(user)
-        response = client.get("/usuario/sair")
+        response = client.post("/usuario/sair")
         assert response.status_code == 302
         assert not response.wsgi_request.user.is_authenticated
 
     def test_session_invalidated_after_logout(self, client, user):
         client.force_login(user)
-        client.get("/usuario/sair")
+        client.post("/usuario/sair")
         follow_response = client.get("/usuario/perfil")
         assert follow_response.status_code == 302
+
+
+@pytest.mark.django_db
+class TestLogoutExigePost:
+    """Cobre a issue #20.
+
+    Logout por GET é acionável por terceiros sem nenhuma interação do usuário —
+    uma tag de imagem apontando para a rota basta. O Django 5 passou a exigir
+    POST no LogoutView nativo pelo mesmo motivo.
+    """
+
+    def test_get_nao_encerra_a_sessao(self, client, user):
+        client.force_login(user)
+        resposta = client.get("/usuario/sair")
+        assert resposta.status_code == 405
+        assert client.get("/usuario/perfil").status_code == 200
+
+    def test_post_encerra_a_sessao(self, client, user):
+        client.force_login(user)
+        assert client.post("/usuario/sair").status_code == 302
+        assert client.get("/usuario/perfil").status_code == 302
+
+    def test_get_em_url_de_imagem_nao_derruba_sessao(self, client, user):
+        """Simula o vetor concreto: <img src="/usuario/sair">."""
+        client.force_login(user)
+        client.get("/usuario/sair", HTTP_ACCEPT="image/webp,image/*,*/*;q=0.8")
+        assert client.get("/usuario/perfil").status_code == 200
+
+
+@pytest.mark.django_db
+class TestTemplatesUsamPostParaLogout:
+    """Sem os templates atualizados, a mudança na view só quebraria o botão."""
+
+    @pytest.mark.parametrize(
+        "url",
+        ["/", "/carrinho/", "/produtos/", "/usuario/perfil"],
+    )
+    def test_pagina_nao_tem_link_get_para_logout(self, client, user, url):
+        client.force_login(user)
+        html = client.get(url).content.decode()
+        assert 'href="/usuario/sair"' not in html
+
+    def test_pagina_tem_form_post_para_logout(self, client, user):
+        client.force_login(user)
+        html = client.get("/").content.decode()
+        assert 'action="/usuario/sair"' in html
+        assert "csrfmiddlewaretoken" in html

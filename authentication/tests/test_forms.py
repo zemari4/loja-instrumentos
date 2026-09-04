@@ -86,7 +86,10 @@ class TestRegisterForm:
             }
         )
         assert not form.is_valid()
-        assert "e-mail já está cadastrado" in str(form.errors)
+        # A mensagem é genérica e não-field de propósito (issue #21): dizer que o
+        # e-mail já existe — ou destacar o campo — confirmaria endereços da base.
+        assert "Não foi possível concluir o cadastro" in str(form.non_field_errors())
+        assert "email" not in form.errors
 
     def test_password_mismatch(self, db):
         from authentication.forms import RegisterForm
@@ -236,3 +239,114 @@ class TestPasswordHashers:
         from django.conf import settings
 
         assert "MD5PasswordHasher" in settings.PASSWORD_HASHERS[0]
+
+
+@pytest.mark.django_db
+class TestLoginComEmailDuplicado:
+    """Cobre a issue #19.
+
+    User.email não é único no modelo padrão do Django. O RegisterForm barra
+    duplicatas, mas nem o admin nem o fluxo social do allauth passam por ele.
+    A busca usava .get(), que levanta MultipleObjectsReturned com duas contas no
+    mesmo e-mail — não tratado, virava HTTP 500 e travava o login de ambas.
+    """
+
+    EMAIL = "duplicado@example.com"
+
+    def _duas_contas_mesmo_email(self):
+        from django.contrib.auth.models import User
+
+        primeiro = User.objects.create_user(
+            username="primeiro", email=self.EMAIL, password="senhaSegura123"
+        )
+        segundo = User.objects.create_user(
+            username="segundo", email=self.EMAIL, password="outraSenhaForte456"
+        )
+        return primeiro, segundo
+
+    def test_email_nao_e_unico_no_modelo_do_django(self):
+        """Premissa da issue: se um dia isto mudar, o resto perde o sentido."""
+        from django.contrib.auth.models import User
+
+        assert User._meta.get_field("email").unique is False
+
+    def test_login_por_email_duplicado_nao_estoura(self, db):
+        from authentication.forms import LoginForm
+
+        self._duas_contas_mesmo_email()
+        form = LoginForm(data={"username": self.EMAIL, "password": "senhaSegura123"})
+        assert form.is_valid(), form.errors
+        assert form.get_user().username == "primeiro"
+
+    def test_resolucao_e_estavel_entre_chamadas(self, db):
+        """Ordenação explícita por pk: sem ela, o usuário escolhido dependeria da
+        ordem que o banco devolvesse."""
+        from authentication.forms import LoginForm
+
+        self._duas_contas_mesmo_email()
+        escolhidos = set()
+        for _ in range(3):
+            form = LoginForm(data={"username": self.EMAIL, "password": "senhaSegura123"})
+            form.is_valid()
+            escolhidos.add(form.get_user().username)
+        assert escolhidos == {"primeiro"}
+
+    def test_login_por_username_continua_funcionando_para_o_segundo(self, db):
+        from authentication.forms import LoginForm
+
+        self._duas_contas_mesmo_email()
+        form = LoginForm(data={"username": "segundo", "password": "outraSenhaForte456"})
+        assert form.is_valid(), form.errors
+        assert form.get_user().username == "segundo"
+
+    def test_email_inexistente_continua_invalido(self, db):
+        from authentication.forms import LoginForm
+
+        form = LoginForm(data={"username": "ninguem@example.com", "password": "x"})
+        assert not form.is_valid()
+
+
+@pytest.mark.django_db
+class TestCadastroNaoEnumeraEmails:
+    """Cobre a issue #21."""
+
+    def _form(self, email, username="novo"):
+        from authentication.forms import RegisterForm
+
+        return RegisterForm(
+            data={
+                "first_name": "Novo",
+                "last_name": "User",
+                "email": email,
+                "username": username,
+                "password1": "senhaSegura123",
+                "password2": "senhaSegura123",
+            }
+        )
+
+    def test_erro_nao_fica_preso_ao_campo_email(self, user):
+        """Mesmo com texto genérico, o campo destacado denunciaria o e-mail."""
+        form = self._form("test@example.com")
+        assert not form.is_valid()
+        assert "email" not in form.errors
+
+    def test_mensagem_nao_menciona_e_mail(self, user):
+        form = self._form("test@example.com")
+        form.is_valid()
+        texto = str(form.non_field_errors()).lower()
+        assert "e-mail" not in texto and "email" not in texto
+
+    def test_username_duplicado_ainda_e_enumeravel(self, user):
+        """Registra o que a issue #21 NÃO cobre.
+
+        A correção fecha a enumeração por e-mail. O username continua sendo
+        enumerável, porque o erro de unicidade vem do ModelForm e aponta o campo.
+        Isso é aceitável — username é identificador público, exibido no site —
+        mas fica fixado aqui para não passar por resolvido.
+        """
+        form = self._form("livre@example.com", username=user.username)
+        assert not form.is_valid()
+        assert "username" in form.errors
+
+    def test_cadastro_legitimo_continua_passando(self, db):
+        assert self._form("novo@example.com").is_valid()

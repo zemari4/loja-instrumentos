@@ -364,4 +364,8 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 X_FRAME_OPTIONS = "SAMEORIGIN"
 
+# Só ligue onde houver um proxy reverso que sobrescreva X-Forwarded-For. Sem
+# proxy, o header vem do cliente e o IP registrado no LoginHistory é forjável.
+TRUST_X_FORWARDED_FOR = env.bool("TRUST_X_FORWARDED_FOR", default=False)
+
 warnings.filterwarnings("ignore", message="Invalid line.*")
