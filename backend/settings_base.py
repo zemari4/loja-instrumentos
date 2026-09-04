@@ -240,6 +240,29 @@ LOGIN_URL = "/usuario/entrar"
 LOGIN_REDIRECT_URL = "/"
 SOCIALACCOUNT_AUTO_SIGNUP = False
 
+# Estes validadores só rodam onde forem chamados explicitamente. O admin e o
+# allauth já os aplicam; o RegisterForm próprio precisa chamar validate_password()
+# no clean(), porque um ModelForm de User não os executa sozinho.
+AUTH_PASSWORD_VALIDATORS = [
+    {"NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"},
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+        "OPTIONS": {"min_length": 10},
+    },
+    {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
+    {"NAME": "django.contrib.auth.password_validation.NumericPasswordValidator"},
+]
+
+# Argon2 primeiro; os demais ficam na lista para que hashes já gravados continuem
+# válidos e sejam reescritos no formato novo no próximo login do usuário.
+# settings_test.py sobrescreve com MD5 para não penalizar a suíte.
+PASSWORD_HASHERS = [
+    "django.contrib.auth.hashers.Argon2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2PasswordHasher",
+    "django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher",
+    "django.contrib.auth.hashers.ScryptPasswordHasher",
+]
+
 # ── FORMS ─────────────────────────────────────────────────────────────────────
 
 CRISPY_ALLOWED_TEMPLATE_PACKS = "tailwind"
