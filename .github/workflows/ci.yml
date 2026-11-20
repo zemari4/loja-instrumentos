@@ -22,6 +22,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683  # v4.2.2
+        with:
+          # Histórico completo: o towncrier check compara o PR com a branch base.
+          fetch-depth: 0
 
       - name: Set up Python
         uses: actions/setup-python@0b93645e9fea7318ecaed2b359559ac225c90a2b  # v5.3.0
@@ -32,9 +35,22 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements-dev.txt
 
+      - name: Lint (ruff)
+        run: ruff check .
+
       # Executa a suíte inteira. Não liste diretórios aqui: apps omitidos deixam
       # de ser verificados sem que nada falhe — foi assim que manager/ e orders/,
       # que cobrem controle de acesso e checkout, ficaram fora do CI.
       # DJANGO_SETTINGS_MODULE vem de [tool.pytest.ini_options] no pyproject.toml.
+      # O mínimo de cobertura é o fail_under de [tool.coverage.report].
       - name: Run tests
-        run: pytest
+        run: pytest --cov=. --cov-report=term-missing
+
+      # O hook de nome de branch roda em Node, que já vem nos runners.
+      - name: Test branch-name hook
+        run: node --test .claude/hooks/
+
+      # Todo PR precisa de um fragmento em changelog.d/<nº-da-issue>.<tipo>.md.
+      - name: Check changelog fragment
+        if: github.event_name == 'pull_request'
+        run: towncrier check --compare-with origin/${{ github.base_ref }}
