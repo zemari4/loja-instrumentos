@@ -8,6 +8,7 @@ from cart.services import (
     clear_cart,
     get_cart,
     remove_item,
+    remove_unavailable_items,
     update_item,
 )
 
@@ -117,9 +118,75 @@ class TestGetCart:
     def test_empty_session_returns_empty(self, session):
         assert get_cart(session) == []
 
+    def test_skips_inactive_products(self, session, instrument):
+        # Issue #24: desativado depois de entrar no carrinho, o item não aparece.
+        add_item(session, instrument.pk, qty=1)
+        instrument.is_active = False
+        instrument.save()
+        assert get_cart(session) == []
+
+    def test_inactive_product_does_not_count_in_total(self, session, instrument, category, brand):
+        from catalog.models import Instrument
+
+        outro = Instrument.objects.create(
+            category=category, brand=brand, name="Outro", slug="outro-24",
+            price="100.00", stock=5, is_active=True,
+        )
+        add_item(session, instrument.pk, qty=1)
+        add_item(session, outro.pk, qty=1)
+        instrument.is_active = False
+        instrument.save()
+        assert cart_total(session) == Decimal("100.00")
+
     def test_skips_deleted_products(self, session, instrument):
         add_item(session, instrument.pk, qty=1)
         pk = instrument.pk
         instrument.delete()
         items = get_cart(session)
         assert all(i["pk"] != pk for i in items)
+
+
+@pytest.mark.django_db
+class TestRemoveUnavailableItems:
+    """Issue #24: item desativado depois de entrar no carrinho sai dele, com aviso."""
+
+    def _outro_instrumento(self, category, brand, slug="outro-24"):
+        from catalog.models import Instrument
+
+        return Instrument.objects.create(
+            category=category, brand=brand, name="Outro", slug=slug,
+            price="100.00", stock=5, is_active=True,
+        )
+
+    def test_removes_inactive_item_and_returns_its_name(self, session, instrument):
+        add_item(session, instrument.pk, qty=2)
+        instrument.is_active = False
+        instrument.save()
+        assert remove_unavailable_items(session) == [instrument.name]
+        assert cart_count(session) == 0
+
+    def test_keeps_active_items(self, session, instrument, category, brand):
+        outro = self._outro_instrumento(category, brand)
+        add_item(session, instrument.pk, qty=1)
+        add_item(session, outro.pk, qty=3)
+        instrument.is_active = False
+        instrument.save()
+        remove_unavailable_items(session)
+        assert [i["pk"] for i in get_cart(session)] == [outro.pk]
+        assert cart_count(session) == 3
+
+    def test_nothing_to_remove_returns_empty_list(self, session, instrument):
+        add_item(session, instrument.pk, qty=1)
+        assert remove_unavailable_items(session) == []
+        assert cart_count(session) == 1
+
+    def test_empty_cart_returns_empty_list(self, session):
+        assert remove_unavailable_items(session) == []
+
+    def test_marks_session_as_modified(self, session, instrument):
+        add_item(session, instrument.pk, qty=1)
+        instrument.is_active = False
+        instrument.save()
+        session.modified = False
+        remove_unavailable_items(session)
+        assert session.modified is True

@@ -13,7 +13,11 @@ def get_cart(session):
     if not raw:
         return []
 
-    instruments = Instrument.objects.filter(pk__in=raw.keys()).select_related("brand").prefetch_related("images")
+    instruments = (
+        Instrument.objects.filter(pk__in=raw.keys(), is_active=True)
+        .select_related("brand")
+        .prefetch_related("images")
+    )
     instrument_map = {str(obj.pk): obj for obj in instruments}
 
     items = []
@@ -34,6 +38,29 @@ def get_cart(session):
             "max_stock": obj.stock,
         })
     return items
+
+
+def cart_instrument_pks(session):
+    """Chaves de todas as entradas do carrinho, inclusive as de instrumentos inativos."""
+    return list(_get_raw(session).keys())
+
+
+def remove_unavailable_items(session):
+    """Tira do carrinho os instrumentos desativados depois de adicionados.
+
+    Devolve os nomes removidos, para a view avisar o cliente.
+    """
+    raw = _get_raw(session)
+    if not raw:
+        return []
+    inativos = list(Instrument.objects.filter(pk__in=raw.keys(), is_active=False).order_by("pk"))
+    if not inativos:
+        return []
+    for instrument in inativos:
+        raw.pop(str(instrument.pk), None)
+    session[CART_SESSION_KEY] = raw
+    session.modified = True
+    return [instrument.name for instrument in inativos]
 
 
 def cart_total(session):
