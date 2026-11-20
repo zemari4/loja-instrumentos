@@ -53,7 +53,7 @@ Administradores têm acesso a um painel para gerenciar produtos, estoque, pedido
 |---|---|
 | **pytest** | Roda os testes automatizados para garantir que o sistema funciona corretamente |
 | **Ruff** | Lint de código (configurado em `pyproject.toml`; ainda não roda no CI) |
-| **towncrier** | Gera o changelog a partir dos fragmentos em `changelog.d/`. Não faz parte dos requirements: instale com `pip install towncrier` |
+| **towncrier** | Gera o changelog a partir dos fragmentos em `changelog.d/<nº-da-issue>.<tipo>.md` (vem no `requirements-dev.txt`) |
 | **GitHub Actions** | CI: roda `pytest` a cada push e pull request para `main` |
 | **Docker** | `Dockerfile.dev` e `docker-compose.yml` para ambiente de desenvolvimento |
 
