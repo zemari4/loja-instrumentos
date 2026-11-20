@@ -20,15 +20,15 @@ import socket
 
 # O toolbar tem um atalho para Docker que resolve host.docker.internal.
 # Neutraliza para o resultado não depender da rede.
-def _sem_docker(host):
+def _no_docker(host):
     raise socket.gaierror(host)
-socket.gethostbyname = _sem_docker
+socket.gethostbyname = _no_docker
 
 import django
 from django.conf import settings
 import backend.settings_dev as dev
 
-settings.configure(**{nome: getattr(dev, nome) for nome in dir(dev) if nome.isupper()})
+settings.configure(**{name: getattr(dev, name) for name in dir(dev) if name.isupper()})
 django.setup()
 
 from debug_toolbar.settings import get_config
@@ -42,48 +42,48 @@ if isinstance(callback, str):
 rf = RequestFactory()
 print(json.dumps({
     "internal_ips": getattr(dev, "INTERNAL_IPS", None),
-    "callback_proprio": "SHOW_TOOLBAR_CALLBACK" in dev.DEBUG_TOOLBAR_CONFIG,
-    "visivel": {ip: bool(callback(rf.get("/", REMOTE_ADDR=ip))) for ip in ("127.0.0.1", "172.18.0.1", "10.0.0.5")},
+    "own_callback": "SHOW_TOOLBAR_CALLBACK" in dev.DEBUG_TOOLBAR_CONFIG,
+    "shown": {ip: bool(callback(rf.get("/", REMOTE_ADDR=ip))) for ip in ("127.0.0.1", "172.18.0.1", "10.0.0.5")},
 }))
 """
 
 
-def _rodar_settings_dev(internal_ip=None):
+def _run_dev_settings(internal_ip=None):
     env = {k: v for k, v in os.environ.items() if k not in ("INTERNAL_IP", "DJANGO_SETTINGS_MODULE")}
     if internal_ip is not None:
         env["INTERNAL_IP"] = internal_ip
-    saida = subprocess.run([sys.executable, "-c", SCRIPT], cwd=ROOT, env=env, capture_output=True, text=True)
-    assert saida.returncode == 0, f"settings_dev não carregou:\n{saida.stderr}"
-    return json.loads(saida.stdout.strip().splitlines()[-1])
+    output = subprocess.run([sys.executable, "-c", SCRIPT], cwd=ROOT, env=env, capture_output=True, text=True)
+    assert output.returncode == 0, f"settings_dev não carregou:\n{output.stderr}"
+    return json.loads(output.stdout.strip().splitlines()[-1])
 
 
 @pytest.fixture(scope="module")
-def padrao():
-    return _rodar_settings_dev()
+def default_env():
+    return _run_dev_settings()
 
 
 @pytest.fixture(scope="module")
-def com_dois_ips():
-    return _rodar_settings_dev("127.0.0.1,172.18.0.1")
+def two_ips_env():
+    return _run_dev_settings("127.0.0.1,172.18.0.1")
 
 
 class TestDebugToolbarEmDev:
-    def test_internal_ips_default_is_localhost(self, padrao):
-        assert padrao["internal_ips"] == ["127.0.0.1"]
+    def test_internal_ips_default_is_localhost(self, default_env):
+        assert default_env["internal_ips"] == ["127.0.0.1"]
 
-    def test_always_true_callback_was_removed(self, padrao):
-        assert padrao["callback_proprio"] is False
+    def test_always_true_callback_was_removed(self, default_env):
+        assert default_env["own_callback"] is False
 
-    def test_shown_for_localhost(self, padrao):
-        assert padrao["visivel"]["127.0.0.1"] is True
+    def test_shown_for_localhost(self, default_env):
+        assert default_env["shown"]["127.0.0.1"] is True
 
-    def test_hidden_for_other_ips(self, padrao):
-        assert padrao["visivel"]["172.18.0.1"] is False
-        assert padrao["visivel"]["10.0.0.5"] is False
+    def test_hidden_for_other_ips(self, default_env):
+        assert default_env["shown"]["172.18.0.1"] is False
+        assert default_env["shown"]["10.0.0.5"] is False
 
-    def test_internal_ip_env_var_accepts_a_comma_separated_list(self, com_dois_ips):
-        assert com_dois_ips["internal_ips"] == ["127.0.0.1", "172.18.0.1"]
+    def test_internal_ip_env_var_accepts_a_comma_separated_list(self, two_ips_env):
+        assert two_ips_env["internal_ips"] == ["127.0.0.1", "172.18.0.1"]
 
-    def test_shown_for_ips_from_env_and_hidden_for_the_rest(self, com_dois_ips):
-        assert com_dois_ips["visivel"]["172.18.0.1"] is True
-        assert com_dois_ips["visivel"]["10.0.0.5"] is False
+    def test_shown_for_ips_from_env_and_hidden_for_the_rest(self, two_ips_env):
+        assert two_ips_env["shown"]["172.18.0.1"] is True
+        assert two_ips_env["shown"]["10.0.0.5"] is False
