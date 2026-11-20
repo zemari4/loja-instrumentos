@@ -1,4 +1,4 @@
-// Testes do hook de nome de branch. Rodar com: node --test .claude/hooks/
+// Testes do hook de nome de branch. Rodar com: node --test .claude/hooks/valida-nome-de-branch.test.mjs
 import { test } from "node:test"
 import assert from "node:assert/strict"
 import { avalia, branchesCriadas } from "./valida-nome-de-branch.mjs"

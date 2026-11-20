@@ -46,9 +46,10 @@ jobs:
       - name: Run tests
         run: pytest --cov=. --cov-report=term-missing
 
-      # O hook de nome de branch roda em Node, que já vem nos runners.
+      # O hook de nome de branch roda em Node, que já vem nos runners. O arquivo é
+      # passado explicitamente: a partir do Node 22, "node --test <pasta>" não varre a pasta.
       - name: Test branch-name hook
-        run: node --test .claude/hooks/
+        run: node --test .claude/hooks/valida-nome-de-branch.test.mjs
 
       # Todo PR precisa de um fragmento em changelog.d/<nº-da-issue>.<tipo>.md.
       - name: Check changelog fragment

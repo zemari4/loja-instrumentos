@@ -81,5 +81,5 @@ O workflow `CI` (`.github/workflows/ci.yml`) roda em push e em PR para `main`:
 |---|---|
 | Lint | `ruff check .` |
 | Testes | `pytest` com cobertura mínima |
-| Hook de branch | `node --test .claude/hooks/` |
+| Hook de branch | `node --test .claude/hooks/valida-nome-de-branch.test.mjs` |
 | Changelog | `towncrier check --compare-with origin/main` (só em PR) |
