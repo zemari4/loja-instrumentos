@@ -52,4 +52,13 @@ Use `gh issue view <nº> --repo zemari4/loja-instrumentos`. O dono normalmente p
 
 ## Observação sobre o ambiente do agente
 
-No sandbox do agente, comandos `gh` de **escrita** (criar issue, label ou PR) já falharam com `Post ".../graphql": unexpected EOF`, enquanto as leituras funcionaram. Se isso acontecer, não tente contornar: peça ao dono para rodar o comando com `!` no prompt, ou para autorizar a repetição fora do sandbox.
+Os comandos `gh` de **escrita** (criar issue, label ou PR) falham de forma **intermitente** com `Post ".../graphql": unexpected EOF`, enquanto as leituras funcionam. No piloto (#24 e #26) isso ocorreu dentro e fora do sandbox, então não é só o sandbox. Conduta:
+
+1. **Antes de repetir, confira se o recurso já existe** (`gh issue list`, `gh pr list --head <branch>`): a chamada pode ter falhado depois de criar. Isso evita issue ou PR duplicado.
+2. Repita até 3 vezes. Se continuar falhando, peça ao dono para rodar o comando com `!` no prompt.
+3. Se a falha vier só dentro do sandbox, peça ao dono para autorizar a repetição fora dele. Não tente contornar de outro jeito.
+4. `gh run view --log-failed` pode devolver `403`. Nesse caso, veja o passo que falhou em `gh run view <id>` e reproduza o problema localmente.
+
+## Limpeza de branches
+
+Depois do merge, apague a branch local e a remota. Só apague a que cumpre **as duas** condições: PR mergeado (`gh pr list --state merged --json headRefName`) e ponta já dentro da `main` (`git branch -r --merged origin/main`). Nunca apague `main` nem `homolog`. Para apagar em lote, peça o aval do dono.

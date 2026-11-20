@@ -54,6 +54,7 @@ Antes de uma view ou endpoint novo, a issue define: entrada (campos e validaçã
 - Interação parcial com HTMX (`hx-*`, `django-htmx`) e interações locais com Alpine.js (`x-data`).
 - Não use o Tailwind Play CDN em páginas novas: a decisão sobre as páginas existentes está em aberto (ver `docs/adr/README.md`).
 - Texto de interface em português do Brasil, seguindo `CONTEXT.md`.
+- Avisos ao cliente usam `django.contrib.messages`. Os templates do carrinho e do checkout (`templates/cart/cart.html`, `templates/orders/checkout.html`) só estilizam `success` e `error`; `warning` e `info` caem no estilo azul de informação. Para avisar de algo que deu errado, use `messages.error`.
 
 ## Nomes
 
