@@ -15,7 +15,7 @@ Um ADR nasce de uma issue (`docs/agent/issue-tracker.md`) ou é citado por uma. 
 
 | Nº | Decisão | Status |
 |---|---|---|
-| [0001](0001-adotar-sdd-com-issues-como-spec.md) | Adotar SDD com a issue como spec | proposed |
+| [0001](0001-adotar-sdd-com-issues-como-spec.md) | Adotar SDD com a issue como spec | accepted |
 
 ## Decisões em aberto
 
