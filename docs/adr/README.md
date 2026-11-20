@@ -16,6 +16,7 @@ Um ADR nasce de uma issue (`docs/agent/issue-tracker.md`) ou é citado por uma. 
 | Nº | Decisão | Status |
 |---|---|---|
 | [0001](0001-adotar-sdd-com-issues-como-spec.md) | Adotar SDD com a issue como spec | accepted |
+| [0002](0002-redis-como-cache-compartilhado.md) | Redis (django-redis) como cache compartilhado do rate limit | accepted |
 
 ## Decisões em aberto
 
@@ -26,7 +27,7 @@ Levantadas no panorama tecnológico. Cada uma vira um ADR (e uma issue com a lab
 | Banco de dados | SQLite ou PostgreSQL em produção? | `.env.example` aponta para Postgres, mas `psycopg` não está nos requirements |
 | Tailwind | CSS compilado ou Play CDN nas páginas públicas? | ~12 templates carregam `cdn.tailwindcss.com` ao lado do CSS compilado |
 | Mídia | Disco local ou armazenamento S3/MinIO? | variáveis S3 no `.env.example`, sem `django-storages` |
-| Cache e filas | Redis e Celery serão adotados? | só variáveis no `.env.example`, `backend/celery.py` está vazio |
+| Filas | Celery será adotado? | `backend/celery.py` está vazio. O Redis já é o cache (ADR 0002) |
 | Observabilidade | Sentry ou outra ferramenta? | só variáveis no `.env.example` |
 | Pagamento | Qual gateway (Pagar.me ou outro)? | pagamento simulado, modelo `Payment` pronto |
 | Frete | Qual serviço de cálculo e etiqueta? | sem implementação |
