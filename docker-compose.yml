@@ -13,7 +13,13 @@ services:
       DJANGO_ENV: dev
       DEBUG: "True"
       SECRET_KEY: dev-secret-local
+      CACHE_LOCATION: redis://redis:6379/0
+    depends_on:
+      - redis
     command: python manage.py runserver 0.0.0.0:8000
+
+  redis:
+    image: redis:7-alpine
 
   tailwind:
     build:

@@ -1,6 +1,6 @@
 """
 Base settings para Music Mais — projeto local de estudo.
-Simples, sem infraestrutura de produção (sem Celery, Redis, S3, Sentry).
+Simples, sem infraestrutura de produção além do Redis (sem Celery, S3, Sentry).
 """
 import logging
 import os
@@ -216,12 +216,16 @@ else:
         }
     }
 
-# ── CACHE (local memory — sem Redis) ─────────────────────────────────────────
+# ── CACHE (Redis — ver docs/adr/0002-redis-como-cache-compartilhado.md) ──────
 
 CACHES = {
     "default": {
-        "BACKEND": "django.core.cache.backends.locmem.LocMemCache",
-        "LOCATION": "musicmais",
+        "BACKEND": "django_redis.cache.RedisCache",
+        "LOCATION": env("CACHE_LOCATION", default="redis://127.0.0.1:6379/0"),
+        "OPTIONS": {
+            "CLIENT_CLASS": "django_redis.client.DefaultClient",
+            "PASSWORD": env("REDIS_PASSWORD", default="") or None,
+        },
     }
 }
 
@@ -229,9 +233,12 @@ SESSION_ENGINE = "django.contrib.sessions.backends.db"
 
 # ── RATELIMIT ────────────────────────────────────────────────────────────────
 
+# O contador do rate limit mora no Redis (compartilhado entre processos e restarts).
+# Redis fora do ar derruba login e cadastro: RATELIMIT_FAIL_OPEN fica no padrão (False).
 RATELIMIT_ENABLE = True
 RATELIMIT_USE_CACHE = "default"
-SILENCED_SYSTEM_CHECKS = ["security.W019", "django_ratelimit.W001", "django_ratelimit.E003"]
+# security.W019: X_FRAME_OPTIONS = "SAMEORIGIN" é escolha deliberada do projeto.
+SILENCED_SYSTEM_CHECKS = ["security.W019"]
 
 # ── AUTH / ALLAUTH ────────────────────────────────────────────────────────────
 

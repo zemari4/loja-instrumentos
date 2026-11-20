@@ -2,6 +2,14 @@
 
 Receita única de verificação do projeto. Outros documentos apontam para cá em vez de repetir comandos.
 
+## Pré-requisito: Redis
+
+O cache é Redis em todos os ambientes (`docs/adr/0002-redis-como-cache-compartilhado.md`), então **a suíte precisa de um Redis acessível**. Os testes usam o banco 15 (`TEST_CACHE_LOCATION`) e limpam o cache antes de cada teste (`conftest.py`). Sem Redis, o `pytest` para cedo com uma mensagem que explica como subir um:
+
+```bash
+docker run -d --name loja-redis -p 127.0.0.1:6379:6379 redis:7-alpine
+```
+
 ## Pirâmide
 
 Prefira sempre o **tier mais baixo** que consiga validar o comportamento. Na dúvida entre dois, escolha o mais baixo.
@@ -79,6 +87,7 @@ O workflow `CI` (`.github/workflows/ci.yml`) roda em push e em PR para `main`:
 
 | Passo | O que faz |
 |---|---|
+| Serviço | Redis 7 (`redis:7-alpine`) como `service` do job |
 | Lint | `ruff check .` |
 | Testes | `pytest` com cobertura mínima |
 | Hook de branch | `node --test .claude/hooks/valida-nome-de-branch.test.mjs` |

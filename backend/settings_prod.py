@@ -23,6 +23,12 @@ if not FIELD_ENCRYPTION_KEY:
         "Configure a variável de ambiente FIELD_ENCRYPTION_KEY para produção."
     )
 
+# Sem Redis o rate limit não é confiável (ADR 0002): não sobe com o padrão local.
+if not env("CACHE_LOCATION", default=None):
+    raise ImproperlyConfigured(
+        "Configure a variável de ambiente CACHE_LOCATION (URL do Redis) para produção."
+    )
+
 ALLOWED_HOSTS = list(filter(None, [
     env("PRIMARY_HOST", default=None),
     "musicmais.com.br",

@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Loja Instrumentos (código `musicmais`): e-commerce de instrumentos musicais.
-Stack: Django 6 + Python 3.12 + SQLite (Postgres via `DATABASE_URL`) + templates com Tailwind, HTMX e Alpine.js.
+Stack: Django 6 + Python 3.12 + SQLite (Postgres via `DATABASE_URL`) + Redis (cache e rate limit, obrigatório em todos os ambientes: ADR 0002) + templates com Tailwind, HTMX e Alpine.js.
 
 Este arquivo é um **roteador**: aponta para o documento certo por tarefa. Princípio de _progressive disclosure_: **carregue só o que a tarefa exige**; não leia os documentos grandes preventivamente, só quando o gatilho "leia quando" se aplicar.
 
@@ -29,6 +29,7 @@ As skills `*-pt` são globais (`~/.claude/skills`) e leem as regras deste reposi
 ```bash
 source .venv/bin/activate
 pip install -r requirements-dev.txt
+docker run -d --name loja-redis -p 127.0.0.1:6379:6379 redis:7-alpine   # Redis, uma vez
 python manage.py migrate
 python manage.py runserver
 
@@ -68,7 +69,7 @@ Pare e pergunte antes de:
 ## Domínio
 
 - Termos canônicos e termos a evitar: `CONTEXT.md` (não driftar para sinônimos).
-- Pagamento é **simulado**: não há gateway real. Pagar.me, Melhor Envio, Focus NFe, Redis, Celery, Sentry e S3 aparecem só no `.env.example`, sem código.
+- Pagamento é **simulado**: não há gateway real. Pagar.me, Melhor Envio, Focus NFe, Celery, Sentry e S3 aparecem só no `.env.example`, sem código.
 - Acesso: cliente vê só os próprios dados; `/manager/` exige `is_staff`.
 - Issues: GitHub `zemari4/loja-instrumentos`, via `gh`. Labels: `docs/agent/triage-labels.md`.
 
