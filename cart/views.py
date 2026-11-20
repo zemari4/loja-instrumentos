@@ -6,10 +6,12 @@ from django.views import View
 from catalog.models import Instrument
 
 from . import services
+from .feedback import avisar_itens_removidos
 
 
 class CartView(View):
     def get(self, request):
+        avisar_itens_removidos(request, services.remove_unavailable_items(request.session))
         items = services.get_cart(request.session)
         total = services.cart_total(request.session)
         return render(request, "cart/cart.html", {"items": items, "total": total})

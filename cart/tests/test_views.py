@@ -1,4 +1,7 @@
 import pytest
+from django.contrib.messages import get_messages
+
+from cart.services import add_item
 
 
 @pytest.mark.django_db
@@ -59,3 +62,45 @@ class TestUpdateCartView:
         client.post(f"/carrinho/atualizar/{instrument.pk}/", {"qty": "0"})
         cart = client.session.get("cart", {})
         assert str(instrument.pk) not in cart
+
+
+def _put_in_cart(client, instrument, qty=1):
+    """Põe o item no carrinho da sessão do client."""
+    sess = client.session
+    add_item(sess, instrument.pk, qty=qty)
+    sess.save()
+
+
+def _notices(response):
+    return [str(m) for m in get_messages(response.wsgi_request)]
+
+
+@pytest.mark.django_db
+class TestCartViewUnavailableItem:
+    """Issue #24: instrumento desativado depois de entrar no carrinho."""
+
+    def test_deactivated_item_leaves_cart_with_notice(self, client, instrument):
+        _put_in_cart(client, instrument)
+        instrument.is_active = False
+        instrument.save()
+        response = client.get("/carrinho/")
+        assert response.status_code == 200
+        assert response.context["items"] == []
+        assert _notices(response) == [
+            f'"{instrument.name}" não está mais disponível e foi removido do carrinho.'
+        ]
+        assert client.session.get("cart") == {}
+
+    def test_no_notice_without_unavailable_item(self, client, instrument):
+        _put_in_cart(client, instrument)
+        response = client.get("/carrinho/")
+        assert _notices(response) == []
+        assert [i["pk"] for i in response.context["items"]] == [instrument.pk]
+
+    def test_notice_shown_only_once(self, client, instrument):
+        _put_in_cart(client, instrument)
+        instrument.is_active = False
+        instrument.save()
+        client.get("/carrinho/")
+        segunda = client.get("/carrinho/")
+        assert _notices(segunda) == []

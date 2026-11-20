@@ -25,7 +25,8 @@ Preço de referência antes do desconto. Quando maior que o preço atual, a loja
 
 **Ativo** (`Instrument.is_active`):
 Instrumento visível e vendável. Inativo não é comprado.
-_Avoid_: "publicado", "disponível" (disponível refere-se a estoque).
+Ao cliente, a interface diz que um instrumento desativado "não está mais disponível" (decisão do dono na issue #24). Em código, specs e issues, use "inativo" (`is_active`) e "sem estoque" (`stock = 0`) para não misturar os dois motivos.
+_Avoid_: "publicado".
 
 **Destaque** (`Instrument.is_featured`):
 Instrumento promovido na vitrine.

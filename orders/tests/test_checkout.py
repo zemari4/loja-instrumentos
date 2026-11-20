@@ -3,13 +3,14 @@ from decimal import Decimal
 from faker import Faker
 
 from django.contrib.auth.models import User
+from django.contrib.messages import get_messages
 from django.urls import reverse
 
 from cart.services import add_item, cart_count, cart_total
 from conftest import MockSession
 from orders.forms import STATES as FORM_STATES
 from orders.models import Order
-from orders.services import OutOfStockError, create_order_from_cart
+from orders.services import ItemUnavailableError, OutOfStockError, create_order_from_cart
 
 fake = Faker("pt_BR")
 
@@ -138,6 +139,75 @@ class TestCheckoutView:
         assert order.shipping_state == addr["shipping_state"]
 
 
+def _notices(response):
+    return [str(m) for m in get_messages(response.wsgi_request)]
+
+
+def _removal_notice(instrument):
+    return f'"{instrument.name}" não está mais disponível e foi removido do carrinho.'
+
+
+class TestCheckoutUnavailableItem:
+    """Issue #24: o checkout aborta e avisa, sem criar pedido parcial."""
+
+    def test_get_removes_inactive_item_and_notifies(self, client, logged_user, instrument, second_instrument):
+        _put_in_cart(client, instrument.pk)
+        _put_in_cart(client, second_instrument.pk)
+        instrument.is_active = False
+        instrument.save()
+        response = client.get(reverse("orders:checkout"))
+        assert response.status_code == 200
+        assert [i["pk"] for i in response.context["cart_items"]] == [second_instrument.pk]
+        assert _removal_notice(instrument) in _notices(response)
+
+    def test_get_with_only_inactive_item_redirects_to_cart_with_notice(self, client, logged_user, instrument):
+        _put_in_cart(client, instrument.pk)
+        instrument.is_active = False
+        instrument.save()
+        response = client.get(reverse("orders:checkout"), follow=True)
+        assert response.redirect_chain[-1][0] == reverse("cart:cart")
+        assert _removal_notice(instrument) in _notices(response)
+
+    def test_post_aborts_and_notifies_without_creating_order(self, client, logged_user, instrument, second_instrument):
+        _put_in_cart(client, instrument.pk, qty=1)
+        _put_in_cart(client, second_instrument.pk, qty=2)
+        instrument.is_active = False
+        instrument.save()
+        response = client.post(reverse("orders:checkout"), _checkout_post_data())
+        assert response.status_code == 302
+        assert response["Location"] == reverse("cart:cart")
+        assert not Order.objects.filter(customer=logged_user).exists()
+        second_instrument.refresh_from_db()
+        assert second_instrument.stock == 5
+        assert list(client.session["cart"]) == [str(second_instrument.pk)]
+
+    def test_post_with_only_inactive_item_creates_no_order(self, client, logged_user, instrument):
+        _put_in_cart(client, instrument.pk)
+        estoque = instrument.stock
+        instrument.is_active = False
+        instrument.save()
+        response = client.post(reverse("orders:checkout"), _checkout_post_data())
+        assert response.status_code == 302
+        assert not Order.objects.filter(customer=logged_user).exists()
+        instrument.refresh_from_db()
+        assert instrument.stock == estoque
+
+    def test_post_race_aborts_via_service(self, client, logged_user, instrument, second_instrument, monkeypatch):
+        # Simula o carrinho desatualizado: a limpeza da view não vê o item inativo,
+        # e quem barra é a revalidação dentro da transação do service. É a exceção
+        # consciente à regra de não mockar colaboradores, aprovada na issue #24.
+        _put_in_cart(client, instrument.pk)
+        _put_in_cart(client, second_instrument.pk)
+        instrument.is_active = False
+        instrument.save()
+        monkeypatch.setattr("orders.views.remove_unavailable_items", lambda session: [])
+        response = client.post(reverse("orders:checkout"), _checkout_post_data())
+        assert response.status_code == 302
+        assert response["Location"] == reverse("cart:cart")
+        assert not Order.objects.filter(customer=logged_user).exists()
+        assert _removal_notice(instrument) in _notices(response)
+
+
 class TestOrderConfirmView:
     def test_requires_login(self, client, db):
         pk = fake.random_int(min=9000, max=9999)
@@ -203,6 +273,13 @@ class TestCreateOrderFromCart:
         with pytest.raises(ValueError, match="vazio"):
             create_order_from_cart(user, session, _fake_address())
 
+    def test_cart_with_only_deleted_instrument_raises_empty(self, db, user, instrument):
+        session = MockSession()
+        add_item(session, instrument.pk, qty=1)
+        instrument.delete()
+        with pytest.raises(ValueError, match="vazio"):
+            create_order_from_cart(user, session, _fake_address())
+
     def test_out_of_stock_raises(self, db, user, instrument):
         session = MockSession()
         add_item(session, instrument.pk, qty=1)
@@ -210,6 +287,37 @@ class TestCreateOrderFromCart:
         instrument.save()
         with pytest.raises(OutOfStockError):
             create_order_from_cart(user, session, _fake_address())
+
+    def test_item_deactivated_after_entering_cart_is_not_invoiced(self, db, user, instrument):
+        # Issue #24: a revalidação de is_active acontece dentro da transação, sobre
+        # as linhas bloqueadas, então cobre também o desativar no meio do checkout.
+        session = MockSession()
+        add_item(session, instrument.pk, qty=2)
+        instrument.is_active = False
+        instrument.save()
+        estoque_antes = instrument.stock
+
+        with pytest.raises(ItemUnavailableError) as erro:
+            create_order_from_cart(user, session, _fake_address())
+
+        assert erro.value.names == [instrument.name]
+        assert not Order.objects.filter(customer=user).exists()
+        instrument.refresh_from_db()
+        assert instrument.stock == estoque_antes
+
+    def test_inactive_with_active_item_creates_no_partial_order(self, db, user, instrument, second_instrument):
+        session = MockSession()
+        add_item(session, instrument.pk, qty=1)
+        add_item(session, second_instrument.pk, qty=2)
+        instrument.is_active = False
+        instrument.save()
+
+        with pytest.raises(ItemUnavailableError):
+            create_order_from_cart(user, session, _fake_address())
+
+        assert not Order.objects.filter(customer=user).exists()
+        second_instrument.refresh_from_db()
+        assert second_instrument.stock == 5
 
     def test_order_total_matches_cart(self, db, user, instrument):
         session = MockSession()
