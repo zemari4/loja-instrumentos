@@ -20,5 +20,5 @@ Itens em "Termos a definir" do `CONTEXT.md` (cancelamento, devolução, frete) a
 ## O que está e o que não está implementado
 
 - **Pagamento é simulado.** Não há gateway real.
-- Frete, nota fiscal, Redis, Celery, Sentry e S3 não têm código (só variáveis no `.env.example`).
+- Frete, nota fiscal, Celery, Sentry e S3 não têm código (só variáveis no `.env.example`). O Redis é o cache e guarda o contador do rate limit (ADR 0002).
 - A lista atualizada está no `README.md`, seção "Ainda não implementado".

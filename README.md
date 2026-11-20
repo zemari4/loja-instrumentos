@@ -33,6 +33,7 @@ Administradores têm acesso a um painel para gerenciar produtos, estoque, pedido
 | **django-simple-history** | Histórico de alterações dos modelos |
 | **django-import-export** | Importação e exportação de produtos |
 | **django-ratelimit** | Limite de requisições em rotas sensíveis |
+| **Redis (django-redis)** | Cache compartilhado; guarda o contador do rate limit de login e cadastro. Obrigatório em todos os ambientes (`docs/adr/0002-redis-como-cache-compartilhado.md`) |
 | **cryptography (Fernet)** | Cifragem de campos sensíveis, como o CPF do perfil |
 | **Pillow** | Upload e processamento de imagens de produto e carrossel |
 | **WhiteNoise** | Entrega dos arquivos estáticos em produção |
@@ -63,7 +64,7 @@ Aparecem no `.env.example`, mas **não têm código** no projeto hoje:
 
 - **Pagamento:** o pagamento é simulado. A integração com Pagar.me (ou outro gateway) é uma etapa futura.
 - **Frete** (Melhor Envio) e **nota fiscal** (Focus NFe).
-- **Redis, Celery, Sentry e armazenamento S3/MinIO:** o cache é em memória, os arquivos de mídia vão para o disco e não há filas nem monitoramento de erros.
+- **Celery, Sentry e armazenamento S3/MinIO:** os arquivos de mídia vão para o disco e não há filas nem monitoramento de erros.
 - **PostgreSQL:** o projeto aceita `DATABASE_URL`, mas o driver `psycopg` não está nos requirements.
 
 ---
@@ -102,6 +103,11 @@ loja-instrumentos/
 
 - Python 3.12+ (exigido pelo `pyproject.toml` e pelo Django 6)
 - Node.js — apenas se for recompilar o CSS; o projeto já vem com o CSS buildado
+- Redis (cache e rate limit), obrigatório. O jeito mais simples é um container:
+
+  ```bash
+  docker run -d --name loja-redis -p 127.0.0.1:6379:6379 redis:7-alpine
+  ```
 
 ### Passos
 
@@ -146,6 +152,7 @@ cd musicmaisCSS/static_src && npm install && npm run dev
 ## Rodando os testes
 
 ```bash
+# Os testes precisam do Redis no ar (usam o banco 15 e limpam o cache a cada teste)
 pytest                                        # todos os testes
 pytest <app>/tests/ -x                        # testes de um app específico
 pytest --cov=. --cov-report=term-missing      # com relatório de cobertura

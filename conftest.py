@@ -4,8 +4,6 @@ import pytest
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "backend.settings_test")
 os.environ.setdefault("DJANGO_ENV", "test")
-os.environ.setdefault("DISABLE_CACHE", "True")
-os.environ.setdefault("DISABLE_REDIS", "True")
 os.environ.setdefault("ENABLE_S3_STORAGE", "False")
 os.environ.setdefault("DISABLE_DEBUG_TOOLBAR", "True")
 
@@ -15,6 +13,31 @@ class MockSession(dict):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.modified = False
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _require_redis():
+    """O cache é Redis em todos os ambientes (ADR 0002): sem ele, para cedo e explica."""
+    from django.conf import settings
+    from django_redis import get_redis_connection
+
+    try:
+        get_redis_connection("default").ping()
+    except Exception as error:
+        pytest.exit(
+            "Redis inacessível em "
+            f"{settings.CACHES['default']['LOCATION']} ({error.__class__.__name__}).\n"
+            "Suba um com: docker run -d --name loja-redis -p 127.0.0.1:6379:6379 redis:7-alpine",
+            returncode=3,
+        )
+
+
+@pytest.fixture(autouse=True)
+def _clean_cache(_require_redis):
+    """Contadores do rate limit persistem no Redis: cada teste começa com o cache vazio."""
+    from django.core.cache import cache
+
+    cache.clear()
 
 
 @pytest.fixture
