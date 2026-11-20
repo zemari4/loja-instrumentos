@@ -1,5 +1,5 @@
 import pytest
-from django.test import RequestFactory
+from django.test import RequestFactory, override_settings
 
 from authentication.models import LoginHistory, UserProfile
 from authentication.services import get_client_ip, get_or_create_profile, record_login
@@ -11,10 +11,23 @@ class TestGetClientIp:
         request = rf.get("/", REMOTE_ADDR="1.2.3.4")
         assert get_client_ip(request) == "1.2.3.4"
 
-    def test_prefers_x_forwarded_for(self):
+    @override_settings(TRUST_X_FORWARDED_FOR=True)
+    def test_usa_x_forwarded_for_quando_ha_proxy_confiavel(self):
         rf = RequestFactory()
         request = rf.get("/", HTTP_X_FORWARDED_FOR="5.6.7.8, 9.9.9.9", REMOTE_ADDR="1.2.3.4")
         assert get_client_ip(request) == "5.6.7.8"
+
+    @override_settings(TRUST_X_FORWARDED_FOR=False)
+    def test_ignora_x_forwarded_for_sem_proxy_confiavel(self):
+        """Sem proxy à frente, o header vem do cliente e é forjável."""
+        rf = RequestFactory()
+        request = rf.get("/", HTTP_X_FORWARDED_FOR="5.6.7.8", REMOTE_ADDR="1.2.3.4")
+        assert get_client_ip(request) == "1.2.3.4"
+
+    def test_padrao_do_projeto_e_nao_confiar(self):
+        from django.conf import settings
+
+        assert getattr(settings, "TRUST_X_FORWARDED_FOR", False) is False
 
 
 @pytest.mark.django_db

@@ -36,7 +36,7 @@
     <nav class="flex items-center gap-4 text-sm text-gray-600">
       {% if user.is_authenticated %}
       <a href="{% url 'authentication:profile' %}" class="hover:text-primary-700">{{ user.first_name|default:user.username }}</a>
-      <a href="{% url 'authentication:logout' %}" class="hover:text-primary-700">Sair</a>
+      {% include "authentication/_logout_button.html" %}
       {% else %}
       <a href="{% url 'authentication:login' %}" class="hover:text-primary-700">Entrar</a>
       {% endif %}
