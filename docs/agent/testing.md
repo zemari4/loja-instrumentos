@@ -10,6 +10,8 @@ O cache é Redis em todos os ambientes (`docs/adr/0002-redis-como-cache-comparti
 docker run -d --name loja-redis -p 127.0.0.1:6379:6379 redis:7-alpine
 ```
 
+O `conftest.py` tem duas fixtures `autouse` para isso: `_require_redis` (uma vez por sessão) e `_clean_cache` (antes de cada teste). Atenção: `cache.clear()` faz `FLUSHDB`, então `TEST_CACHE_LOCATION` precisa apontar para um banco **só de testes** (o padrão é o 15), e a suíte não deve rodar em paralelo no mesmo banco (não há `xdist`).
+
 ## Pirâmide
 
 Prefira sempre o **tier mais baixo** que consiga validar o comportamento. Na dúvida entre dois, escolha o mais baixo.

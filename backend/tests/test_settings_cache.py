@@ -29,6 +29,7 @@ PRINT_CACHE_SETTINGS = (
     "import json; from django.conf import settings; "
     "c = settings.CACHES['default']; "
     "print(json.dumps({'backend': c['BACKEND'], 'location': c['LOCATION'], "
+    "'password': c['OPTIONS']['PASSWORD'], "
     "'silenced': sorted(settings.SILENCED_SYSTEM_CHECKS), "
     "'ratelimit_cache': settings.RATELIMIT_USE_CACHE}))"
 )
@@ -49,12 +50,13 @@ def _cache_settings(extra=None):
 
 @pytest.fixture(scope="module")
 def default_dev():
-    return _cache_settings()
+    # REDIS_PASSWORD vazia, como no .env.example
+    return _cache_settings({"REDIS_PASSWORD": ""})
 
 
 @pytest.fixture(scope="module")
 def custom_location():
-    return _cache_settings({"CACHE_LOCATION": "redis://cache.example:6380/3"})
+    return _cache_settings({"CACHE_LOCATION": "redis://cache.example:6380/3", "REDIS_PASSWORD": "test-password"})
 
 
 @pytest.fixture(scope="module")
@@ -72,6 +74,12 @@ class TestSharedCacheSettings:
     def test_location_comes_from_cache_location_env(self, custom_location):
         assert custom_location["location"] == "redis://cache.example:6380/3"
 
+    def test_empty_redis_password_becomes_none(self, default_dev):
+        assert default_dev["password"] is None
+
+    def test_password_comes_from_redis_password_env(self, custom_location):
+        assert custom_location["password"] == "test-password"
+
     def test_rate_limit_uses_the_default_cache(self, default_dev):
         assert default_dev["ratelimit_cache"] == "default"
 
@@ -82,9 +90,9 @@ class TestSharedCacheSettings:
 
 class TestProductionCache:
     def test_check_deploy_passes_without_ratelimit_errors(self, prod_check):
-        saida = prod_check.stdout + prod_check.stderr
-        assert prod_check.returncode == 0, saida
-        assert "django_ratelimit" not in saida, saida
+        output = prod_check.stdout + prod_check.stderr
+        assert prod_check.returncode == 0, output
+        assert "django_ratelimit" not in output, output
 
     def test_refuses_to_start_without_cache_location(self):
         result = _manage("check", extra={k: v for k, v in PROD_ENV.items() if k != "CACHE_LOCATION"},

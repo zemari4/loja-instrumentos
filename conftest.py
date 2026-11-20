@@ -23,10 +23,10 @@ def _require_redis():
 
     try:
         get_redis_connection("default").ping()
-    except Exception as erro:
+    except Exception as error:
         pytest.exit(
             "Redis inacessível em "
-            f"{settings.CACHES['default']['LOCATION']} ({erro.__class__.__name__}).\n"
+            f"{settings.CACHES['default']['LOCATION']} ({error.__class__.__name__}).\n"
             "Suba um com: docker run -d --name loja-redis -p 127.0.0.1:6379:6379 redis:7-alpine",
             returncode=3,
         )
