@@ -16,7 +16,11 @@ MIDDLEWARE = [
     "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
+# A toolbar expõe configuração, SQL e estado interno. O callback padrão da biblioteca
+# só a mostra com DEBUG ligado e quando o IP de origem está em INTERNAL_IPS.
+# INTERNAL_IP aceita vários IPs separados por vírgula (ex.: o gateway do Docker).
+INTERNAL_IPS = env.list("INTERNAL_IP", default=["127.0.0.1"])
+
 DEBUG_TOOLBAR_CONFIG = {
-    "SHOW_TOOLBAR_CALLBACK": lambda request: True,
     "SHOW_COLLAPSED": True,
 }
