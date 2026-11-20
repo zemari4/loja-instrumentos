@@ -2,7 +2,7 @@
 
 ## Status
 
-proposed (issue #34). Passa a `accepted` quando o dono aprovar.
+accepted (issue #34, 2026-11-20). Aprovado pelo dono do projeto depois do merge dos PRs #36 e #37.
 
 ## Decisão
 
