@@ -48,6 +48,21 @@ Antes de criar um teste, procure se o comportamento já está coberto (`grep -ri
 - Não esconda dívida com `pytest.skip` ou `xfail`: se precisar, escreva o motivo e a issue na própria linha.
 - O pyproject usa `--reuse-db`. Depois de criar ou mudar uma migration, rode `pytest --create-db` uma vez.
 
+## Testes de configuração (settings)
+
+Teste de `settings` fica em `backend/tests/` (exemplo: `backend/tests/test_settings_dev.py`). Rode o módulo **num subprocesso** (`sys.executable -c ...`, com `cwd` na raiz): `settings_dev` altera listas importadas de `settings_base` (`INSTALLED_APPS`, `MIDDLEWARE`), o que contaminaria os outros testes, e variáveis como `INTERNAL_IP` são lidas na importação. Mostre o `stderr` do subprocesso quando ele falhar e neutralize o que depende da rede (o atalho Docker da debug toolbar resolve `host.docker.internal`).
+
+## Testes de view com mensagens
+
+As mensagens do `django.contrib.messages` leem-se com `get_messages(response.wsgi_request)`. Depois de um redirect, use `client.get(url, follow=True)`: as mensagens aparecem na resposta final.
+
+## Erros que a revisão já pegou
+
+- **Asserção tautológica**, como `assert x or True`: nunca falha. Todo teste precisa poder falhar.
+- **Idioma:** nomes de teste e identificadores em inglês, como no resto do projeto (`conventions.md`, "Nomes").
+- **Fixture duplicada:** se dois arquivos criam o mesmo objeto, a fixture vai para `conftest.py`.
+- **Teste que passa antes da correção:** rode o teste vermelho antes do código. Se mexer no teste depois, faça a **checagem de mutação**: reverta a correção e confirme que ele volta a falhar.
+
 ## O que rodar quando
 
 | Momento | Comandos |
