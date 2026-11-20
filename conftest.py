@@ -66,6 +66,22 @@ def instrument(db, category, brand):
 
 
 @pytest.fixture
+def second_instrument(db, category, brand):
+    """Outro instrumento ativo, para testes com mais de um item."""
+    from catalog.models import Instrument
+
+    return Instrument.objects.create(
+        category=category,
+        brand=brand,
+        name="Telecaster",
+        slug="fender-telecaster",
+        price="100.00",
+        stock=5,
+        is_active=True,
+    )
+
+
+@pytest.fixture
 def inactive_instrument(db, category, brand):
     from catalog.models import Instrument
 

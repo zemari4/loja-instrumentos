@@ -125,15 +125,9 @@ class TestGetCart:
         instrument.save()
         assert get_cart(session) == []
 
-    def test_inactive_product_does_not_count_in_total(self, session, instrument, category, brand):
-        from catalog.models import Instrument
-
-        outro = Instrument.objects.create(
-            category=category, brand=brand, name="Outro", slug="outro-24",
-            price="100.00", stock=5, is_active=True,
-        )
+    def test_inactive_product_does_not_count_in_total(self, session, instrument, second_instrument):
         add_item(session, instrument.pk, qty=1)
-        add_item(session, outro.pk, qty=1)
+        add_item(session, second_instrument.pk, qty=1)
         instrument.is_active = False
         instrument.save()
         assert cart_total(session) == Decimal("100.00")
@@ -150,14 +144,6 @@ class TestGetCart:
 class TestRemoveUnavailableItems:
     """Issue #24: item desativado depois de entrar no carrinho sai dele, com aviso."""
 
-    def _outro_instrumento(self, category, brand, slug="outro-24"):
-        from catalog.models import Instrument
-
-        return Instrument.objects.create(
-            category=category, brand=brand, name="Outro", slug=slug,
-            price="100.00", stock=5, is_active=True,
-        )
-
     def test_removes_inactive_item_and_returns_its_name(self, session, instrument):
         add_item(session, instrument.pk, qty=2)
         instrument.is_active = False
@@ -165,14 +151,13 @@ class TestRemoveUnavailableItems:
         assert remove_unavailable_items(session) == [instrument.name]
         assert cart_count(session) == 0
 
-    def test_keeps_active_items(self, session, instrument, category, brand):
-        outro = self._outro_instrumento(category, brand)
+    def test_keeps_active_items(self, session, instrument, second_instrument):
         add_item(session, instrument.pk, qty=1)
-        add_item(session, outro.pk, qty=3)
+        add_item(session, second_instrument.pk, qty=3)
         instrument.is_active = False
         instrument.save()
         remove_unavailable_items(session)
-        assert [i["pk"] for i in get_cart(session)] == [outro.pk]
+        assert [i["pk"] for i in get_cart(session)] == [second_instrument.pk]
         assert cart_count(session) == 3
 
     def test_nothing_to_remove_returns_empty_list(self, session, instrument):

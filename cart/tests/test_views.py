@@ -64,43 +64,43 @@ class TestUpdateCartView:
         assert str(instrument.pk) not in cart
 
 
-def _no_carrinho(client, instrument, qty=1):
+def _put_in_cart(client, instrument, qty=1):
     """Põe o item no carrinho da sessão do client."""
     sess = client.session
     add_item(sess, instrument.pk, qty=qty)
     sess.save()
 
 
-def _avisos(response):
+def _notices(response):
     return [str(m) for m in get_messages(response.wsgi_request)]
 
 
 @pytest.mark.django_db
-class TestCartViewItemIndisponivel:
+class TestCartViewUnavailableItem:
     """Issue #24: instrumento desativado depois de entrar no carrinho."""
 
-    def test_item_desativado_sai_do_carrinho_com_aviso(self, client, instrument):
-        _no_carrinho(client, instrument)
+    def test_deactivated_item_leaves_cart_with_notice(self, client, instrument):
+        _put_in_cart(client, instrument)
         instrument.is_active = False
         instrument.save()
         response = client.get("/carrinho/")
         assert response.status_code == 200
         assert response.context["items"] == []
-        assert _avisos(response) == [
+        assert _notices(response) == [
             f'"{instrument.name}" não está mais disponível e foi removido do carrinho.'
         ]
         assert client.session.get("cart") == {}
 
-    def test_sem_item_indisponivel_nao_ha_aviso(self, client, instrument):
-        _no_carrinho(client, instrument)
+    def test_no_notice_without_unavailable_item(self, client, instrument):
+        _put_in_cart(client, instrument)
         response = client.get("/carrinho/")
-        assert _avisos(response) == []
+        assert _notices(response) == []
         assert [i["pk"] for i in response.context["items"]] == [instrument.pk]
 
-    def test_aviso_aparece_uma_vez_so(self, client, instrument):
-        _no_carrinho(client, instrument)
+    def test_notice_shown_only_once(self, client, instrument):
+        _put_in_cart(client, instrument)
         instrument.is_active = False
         instrument.save()
         client.get("/carrinho/")
         segunda = client.get("/carrinho/")
-        assert _avisos(segunda) == []
+        assert _notices(segunda) == []
